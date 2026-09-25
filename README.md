@@ -115,26 +115,19 @@ npx -y http-server -p 8080 -c-1
 
 ## 🚀 部署至 GitHub Pages 步驟
 
-本專案使用相對路徑設計，且無任何編譯打包步驟，可直接部屬至 GitHub Pages：
+本專案使用純靜態檔案與相對路徑設計，無須任何編譯打包步驟即可直接發布至 GitHub Pages：
 
-1. **建立 GitHub Repository**：
-   在 GitHub 上建立一個新的 Public Repository（例如 `taiwan-weather`）。
-
-2. **推送本地程式碼**：
-   在專案終端機執行：
+1. **推送本地程式碼至 GitHub**：
+   專案已設定好遠端倉庫，在終端機直接執行：
    ```bash
-   git add .
-   git commit -m "feat: initial commit for Taiwan Weather Forecast web app"
-   git remote add origin https://github.com/<您的GitHub帳號>/<專案名稱>.git
-   git branch -M main
    git push -u origin main
    ```
 
-3. **啟用 GitHub Pages**：
-   - 進入 GitHub 專案頁面 ➔ 點選「**Settings**」分頁。
-   - 在左側選單點選「**Pages**」。
+2. **啟用 GitHub Pages**：
+   - 進入您的專案頁面：[https://github.com/clairypeng-dotcom/Hw1Taiwan-weather-forecast/settings/pages](https://github.com/clairypeng-dotcom/Hw1Taiwan-weather-forecast/settings/pages)
    - 在「**Build and deployment**」區塊：
-     - Source 選擇：`Deploy from a branch`。
-     - Branch 選擇：`main`，目錄選擇：`/ (root)`。
+     - Source 選擇：`Deploy from a branch`
+     - Branch 選擇：`main`，資料夾選擇：`/ (root)`
    - 點擊「**Save**」。
-   - 等待約 1~2 分鐘後，即可透過提供的網址（如 `https://<帳號>.github.io/<專案名稱>/`）公開造訪您的台灣氣象預報網站！
+   - 等待約 1~2 分鐘後，即可透過專屬網址公開瀏覽您的氣象預報網站：
+     👉 **[https://clairypeng-dotcom.github.io/Hw1Taiwan-weather-forecast/](https://clairypeng-dotcom.github.io/Hw1Taiwan-weather-forecast/)**
