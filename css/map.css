@@ -1,0 +1,156 @@
+/**
+ * map.css - 台灣向量地圖、縣市路徑 Hover/Active 樣式與懸浮提示 Tooltip
+ */
+
+.map-card {
+  padding: 24px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.map-card-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.map-hint {
+  font-size: 0.82rem;
+  color: var(--slate-500);
+}
+
+.taiwan-map-container {
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  position: relative;
+  user-select: none;
+}
+
+.taiwan-map-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 8px 20px rgba(14, 116, 144, 0.12));
+}
+
+/* 縣市路徑樣式 */
+.county-path {
+  fill: #bae6fd;
+  stroke: #ffffff;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  cursor: pointer;
+  transition: fill 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+              stroke 0.2s ease, 
+              stroke-width 0.2s ease, 
+              filter 0.2s ease;
+}
+
+/* 懸浮狀態 */
+.county-path:hover {
+  fill: #60a5fa;
+  stroke: #ffffff;
+  stroke-width: 2;
+  filter: drop-shadow(0 2px 6px rgba(37, 99, 235, 0.35));
+}
+
+/* 選取中狀態 (Active) */
+.county-path.active {
+  fill: #2563eb;
+  stroke: #ffffff;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 4px 12px rgba(29, 78, 216, 0.5));
+}
+
+/* 離島外框樣式 */
+.inset-border {
+  fill: rgba(240, 249, 255, 0.6);
+  stroke: var(--slate-300);
+  stroke-dasharray: 4, 3;
+  stroke-width: 1;
+}
+
+.inset-title {
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--slate-600);
+  font-family: var(--font-sans);
+}
+
+.island-box.active .inset-border {
+  stroke: var(--primary-600);
+  stroke-dasharray: none;
+  stroke-width: 1.8;
+  fill: rgba(219, 234, 254, 0.5);
+}
+
+/* 地圖文字標籤 */
+.map-label {
+  font-size: 11px;
+  font-weight: 700;
+  fill: #1e3a8a;
+  text-anchor: middle;
+  font-family: var(--font-sans);
+  opacity: 0.9;
+}
+
+/* 懸浮資訊卡 (Map Tooltip) */
+.map-tooltip {
+  position: fixed;
+  pointer-events: none;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #ffffff;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  font-size: 0.85rem;
+  z-index: 1000;
+  opacity: 0;
+  transform: translateY(6px) scale(0.96);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.map-tooltip.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.map-tip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.map-tip-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.map-tip-temp {
+  font-weight: 800;
+  color: #38bdf8;
+  font-size: 1.05rem;
+}
+
+.map-tip-body {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #cbd5e1;
+  font-size: 0.8rem;
+}
+
+.map-tip-icon {
+  width: 18px;
+  height: 18px;
+}

@@ -1,0 +1,473 @@
+/**
+ * dashboard.css - 天氣儀表板、即時英雄卡、24小時預報、多日趨勢圖與縣市速覽卡片
+ */
+
+/* 1. 主天氣英雄卡片 (Hero Card) */
+.hero-weather-card {
+  padding: 32px;
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #38bdf8 100%);
+  color: #ffffff;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 16px 36px -8px rgba(37, 99, 235, 0.35);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 裝飾性背景光斑 */
+.hero-weather-card::after {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.hero-location-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-city-title {
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.hero-station-text {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 4px;
+}
+
+.hero-obs-badge {
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* 核心氣溫與圖示區塊 */
+.hero-main-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.hero-temp-wrapper {
+  display: flex;
+  align-items: baseline;
+}
+
+.hero-temp-value {
+  font-size: 5.5rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-feature-settings: "tnum";
+}
+
+.hero-temp-unit {
+  font-size: 2.25rem;
+  font-weight: 400;
+  margin-left: 4px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* 氣溫數值微彈跳動畫 */
+@keyframes tempBounce {
+  0% { transform: scale(0.96); opacity: 0.7; }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.temp-bounce {
+  animation: tempBounce 0.4s ease-out;
+}
+
+.hero-condition-box {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.hero-weather-icon-img {
+  width: 96px;
+  height: 96px;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.2));
+  animation: iconFloat 4s ease-in-out infinite;
+}
+
+@keyframes iconFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.hero-condition-desc {
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-condition-name {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.hero-range-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.hero-range-badge .high-tag {
+  color: #fde047;
+}
+
+.hero-range-badge .low-tag {
+  color: #bae6fd;
+}
+
+/* 2. 氣象六大關鍵指標卡片格 (Metrics Grid) */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.metric-item {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.metric-item:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.metric-title {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.metric-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.metric-sub {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.75);
+  margin-top: 2px;
+}
+
+/* 3. 未來 24 小時時段預報卡片組 (Hourly Forecast) */
+.hourly-section {
+  padding: 24px;
+}
+
+.hourly-forecast-container {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 8px 4px 16px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 美化橫向滾動條 */
+.hourly-forecast-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.hourly-forecast-container::-webkit-scrollbar-track {
+  background: var(--slate-100);
+  border-radius: var(--radius-full);
+}
+
+.hourly-forecast-container::-webkit-scrollbar-thumb {
+  background: var(--slate-300);
+  border-radius: var(--radius-full);
+}
+
+.hourly-forecast-container::-webkit-scrollbar-thumb:hover {
+  background: var(--slate-400);
+}
+
+.hourly-card {
+  flex: 0 0 96px;
+  background: var(--card-bg-solid);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  scroll-snap-align: start;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.hourly-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--primary-300);
+  box-shadow: var(--shadow-md);
+}
+
+.hourly-card.is-now {
+  background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+  border-color: var(--primary-400);
+  box-shadow: 0 0 12px rgba(37, 99, 235, 0.15);
+}
+
+.hourly-time {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--slate-600);
+}
+
+.hourly-icon {
+  width: 42px;
+  height: 42px;
+}
+
+.hourly-temp {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--slate-800);
+}
+
+.hourly-pop {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--sky-accent);
+}
+
+/* 4. 未來 7 日溫度趨勢圖表 (Trend Chart) */
+.trend-section {
+  padding: 24px;
+}
+
+.trend-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.trend-legend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+}
+
+.legend-dot.high {
+  background: #f97316;
+}
+
+.legend-dot.low {
+  background: #0284c7;
+}
+
+.chart-wrapper {
+  width: 100%;
+  height: 240px;
+  position: relative;
+}
+
+#trend-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: crosshair;
+}
+
+/* 5. 全台 22 縣市氣象速覽卡片格 (County Grid) */
+.counties-overview-section {
+  padding: 24px;
+}
+
+.county-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.county-card {
+  background: var(--card-bg-solid);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+
+.county-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--primary-400);
+  box-shadow: var(--shadow-md);
+}
+
+.county-card.active {
+  border-color: var(--primary-600);
+  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.2);
+}
+
+.county-card.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 4px;
+  background: var(--primary-600);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.county-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.county-card-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--slate-800);
+}
+
+.county-card-temp {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--primary-700);
+}
+
+.county-card-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.county-card-desc {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.county-card-icon {
+  width: 26px;
+  height: 26px;
+}
+
+.county-card-weather {
+  font-size: 0.85rem;
+  color: var(--slate-600);
+  font-weight: 500;
+}
+
+.county-card-range {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.county-card-range .range-high {
+  color: #ea580c;
+}
+
+.county-card-range .range-divider {
+  color: var(--slate-300);
+  margin: 0 2px;
+}
+
+.county-card-range .range-low {
+  color: #0284c7;
+}
+
+/* 響應式優化 */
+@media (max-width: 640px) {
+  .hero-weather-card {
+    padding: 22px 18px;
+  }
+
+  .hero-city-title {
+    font-size: 1.75rem;
+  }
+
+  .hero-temp-value {
+    font-size: 4rem;
+  }
+
+  .hero-weather-icon-img {
+    width: 72px;
+    height: 72px;
+  }
+
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .county-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+}
