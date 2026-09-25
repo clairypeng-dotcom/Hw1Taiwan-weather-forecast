@@ -138,11 +138,40 @@ const API = {
     }
 
     // 解析測站清單（相容 Station 或 location 陣列）
-    const stations = result.records?.Station || result.records?.location || [];
+    const stations = result.records?.Station || result.cwaopendata?.dataset?.Station || result.records?.location || [];
     if (!Array.isArray(stations) || stations.length === 0) {
       throw new Error('API 未包含任何氣象站觀測數據');
     }
 
+    const parsedData = this.parseStations(stations);
+
+    // 更新快取
+    this._cache.data = parsedData;
+    this._cache.timestamp = now;
+
+    return parsedData;
+  },
+
+  /**
+   * 嘗試讀取本地提供的 O-A0003-001.json 檔案
+   */
+  async fetchLocalCWAData() {
+    try {
+      const response = await fetch('./O-A0003-001.json');
+      if (!response.ok) return null;
+      const result = await response.json();
+      const stations = result.cwaopendata?.dataset?.Station || result.records?.Station || [];
+      if (!Array.isArray(stations) || stations.length === 0) return null;
+      return this.parseStations(stations);
+    } catch (e) {
+      return null;
+    }
+  },
+
+  /**
+   * 統一解析中央氣象署 Station 測站陣列為全台 22 縣市對照物件
+   */
+  parseStations(stations) {
     const parsedData = {};
 
     stations.forEach(item => {
@@ -264,10 +293,6 @@ const API = {
       }
     });
 
-    // 更新快取
-    this._cache.data = parsedData;
-    this._cache.timestamp = now;
-
     return parsedData;
   },
 
@@ -287,12 +312,23 @@ const API = {
           weeklyForecast: DEMO_DATA.generateWeeklyForecast(baseCounty)
         };
       } catch (err) {
-        console.warn('CWA Live API 呼叫失敗，降級切換至展示模式：', err);
-        throw err; // 拋出讓 UI 顯示友善提示
+        console.warn('CWA Live API 呼叫失敗，嘗試本地資料或展示模式：', err);
+        throw err;
       }
     }
 
-    // Demo Mode 直接回傳高品質模擬資料
+    // 若在 Demo/離線模式下，先檢查是否有使用者提供的 O-A0003-001.json
+    const localData = await this.fetchLocalCWAData();
+    if (localData && localData[countyId]) {
+      const baseCounty = localData[countyId];
+      return {
+        ...baseCounty,
+        hourlyForecast: DEMO_DATA.generateHourlyForecast(baseCounty),
+        weeklyForecast: DEMO_DATA.generateWeeklyForecast(baseCounty)
+      };
+    }
+
+    // Fallback 回退至高品質模擬資料
     return DEMO_DATA.getCountyData(countyId);
   },
 
@@ -307,9 +343,15 @@ const API = {
         return Object.values(liveAll);
       } catch (err) {
         console.warn('CWA Live API 獲取全台資料失敗：', err);
-        return DEMO_DATA.getAllCounties();
       }
     }
+
+    // 檢查是否有使用者提供的 O-A0003-001.json
+    const localData = await this.fetchLocalCWAData();
+    if (localData && Object.keys(localData).length > 0) {
+      return Object.values(localData);
+    }
+
     return DEMO_DATA.getAllCounties();
   },
 
