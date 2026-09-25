@@ -130,5 +130,4 @@ npx -y http-server -p 8080 -c-1
      - Branch 選擇：`main`，資料夾選擇：`/ (root)`
    - 點擊「**Save**」。
    - 等待約 1~2 分鐘後，即可透過專屬網址公開瀏覽您的氣象預報網站：
-     👉 **[https://clairypeng-dotcom.github.io/Hw1Taiwan-weather-forecast/](https://clairypeng-dotcom.github.io/Hw1Taiwan-weather-forecast/)**
-# Hw1Taiwan-weather-forecast
+     👉 **[https://clairypeng-dotcom.github.io/Hw1Taiwan-weather-forecast/](https://clairypeng-dotcom.github.io/Hw1Taiwan-weather-forecast/)**asdfasfd
