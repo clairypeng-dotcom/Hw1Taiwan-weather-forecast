@@ -1,5 +1,14 @@
 # 🌤️ Taiwan Weather Forecast (HW10)
 
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://hw1taiwan-weather-forecast-dqhwvp6gxevbtxpwiglajz.streamlit.app)
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live%20Demo-blue?logo=github)](https://clairypeng-dotcom.github.io/Hw1Taiwan-weather-forecast/)
+
+> 🔗 **線上即時展示網址 (Live Demos)**：
+> - 🌤️ **Streamlit 雲端氣象預報系統 (HW10 核心成果)**：  
+>   👉 **[https://hw1taiwan-weather-forecast-dqhwvp6gxevbtxpwiglajz.streamlit.app](https://hw1taiwan-weather-forecast-dqhwvp6gxevbtxpwiglajz.streamlit.app)**
+> - 🌐 **GitHub Pages 靜態前端展示 (HW1 原生網頁)**：  
+>   👉 **[https://clairypeng-dotcom.github.io/Hw1Taiwan-weather-forecast/](https://clairypeng-dotcom.github.io/Hw1Taiwan-weather-forecast/)**
+
 本專案是一個完整的台灣天氣預報系統，支援 **雙軌架構**：
 1. **Python + CWA API + SQLite + Streamlit + Folium** (HW10 作業核心架構)
 2. **純原生前端 Web App (HTML/CSS/JS)** (支援 GitHub Pages 靜態託管展示)
@@ -128,10 +137,13 @@ streamlit run app.py
 
 ---
 
-## ☁️ 部署至 Streamlit Community Cloud
+## ☁️ 部署至 Streamlit Community Cloud (已正式上線)
 
-本專案已完全適配 Streamlit Community Cloud 免費雲端部署：
+本專案已成功部署上線至 Streamlit Community Cloud，可直接點擊下方網址存取：
 
+👉 **正式線上存取網址**：**[https://hw1taiwan-weather-forecast-dqhwvp6gxevbtxpwiglajz.streamlit.app](https://hw1taiwan-weather-forecast-dqhwvp6gxevbtxpwiglajz.streamlit.app)**
+
+### 雲端部署設定手冊：
 1. 前往 [Streamlit Community Cloud](https://share.streamlit.io/) 並使用 GitHub 帳號登入。
 2. 點擊 **"Create app"** ➔ **"Deploy an app"**。
 3. 填入專案設定：
@@ -142,5 +154,6 @@ streamlit run app.py
    ```toml
    CWA_API_KEY = "CWA-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
    ```
-5. 點擊 **"Deploy!"**，數分鐘內即可完成雲端上線！
+5. 點擊 **"Deploy!"** 即可完成雲端發布與即時連線！
+
 
