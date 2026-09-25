@@ -128,12 +128,14 @@ streamlit run app.py
 
 ---
 
-## 🌐 保留之靜態前端網站 (GitHub Pages)
+## 🌐 GitHub Pages 線上網站 (全新 HW10 版本)
 
-原有的純前端靜態網站依然完整保留：
-- **靜態檔案**：`index.html`、`css/`、`js/`、`assets/`
-- **本機執行**：`python3 -m http.server 8080` (開啟 `http://localhost:8080`)
-- **GitHub 部署頁面**：[https://clairypeng-dotcom.github.io/Hw1Taiwan-weather-forecast/](https://clairypeng-dotcom.github.io/Hw1Taiwan-weather-forecast/)
+GitHub Pages 已同步升級為全新 HW10 台灣氣象預報系統：
+- **線上網址**：👉 **[https://clairypeng-dotcom.github.io/Hw1Taiwan-weather-forecast/](https://clairypeng-dotcom.github.io/Hw1Taiwan-weather-forecast/)**
+- **雙模式整合**：
+  1. **Streamlit 雲端版 (預設)**：直接整合 Streamlit 雲端應用程式，支援即時連線。
+  2. **極速獨立版**：免等待伺服器喚醒，直接於瀏覽器呈現互動式台灣地圖標記、28 地區預報、7 天高低溫折線圖與完整資料表。
+
 
 ---
 

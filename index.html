@@ -3,287 +3,840 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>台灣氣象預報 Taiwan Weather Forecast - 即時觀測與多日趨勢儀表板</title>
-  <meta name="description" content="現代化台灣天氣預報 Web App，整合中央氣象署 (CWA) O-A0003-001 即時觀測資料。提供互動式台灣地圖、24小時時段預報、高低溫趨勢圖表與全台22縣市氣象資訊。">
-  <meta name="theme-color" content="#2563EB">
+  <title>Taiwan Weather Forecast (HW10) - 台灣一週氣象預報</title>
+  <meta name="description" content="Taiwan Weather Forecast (HW10) 氣象預報系統，整合交通部中央氣象署 (CWA) 一週預報資料、SQLite data.db (TemperatureForecasts)、Streamlit 雲端系統與互動式台灣地圖。">
+  <meta name="theme-color" content="#1E3A8A">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌤️</text></svg>">
 
-  <!-- 樣式表引入 (CSS 分離管理) -->
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/components.css">
-  <link rel="stylesheet" href="css/dashboard.css">
-  <link rel="stylesheet" href="css/map.css">
+  <!-- Google Fonts & Leaflet & Chart.js -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      --primary: #2563EB;
+      --primary-dark: #1E3A8A;
+      --primary-light: #38BDF8;
+      --text-main: #0F172A;
+      --text-muted: #64748B;
+      --bg-page: #F0F6FF;
+      --card-bg: rgba(255, 255, 255, 0.96);
+      --card-border: #E2E8F0;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 12px rgba(37,99,235,0.08);
+      --shadow-lg: 0 10px 25px -5px rgba(37,99,235,0.2);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(180deg, #F0F6FF 0%, #FFFFFF 60%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 頂部導覽列 */
+    .top-nav {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    }
+
+    .nav-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+
+    .brand-icon {
+      font-size: 1.8rem;
+      line-height: 1;
+    }
+
+    .brand-text h1 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--primary-dark);
+      letter-spacing: -0.02em;
+    }
+
+    .brand-text p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    /* 視圖切換器 */
+    .view-switcher {
+      display: flex;
+      background: #E2E8F0;
+      padding: 3px;
+      border-radius: 10px;
+      gap: 4px;
+    }
+
+    .view-btn {
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: transparent;
+      color: #475569;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .view-btn.active {
+      background: #FFFFFF;
+      color: var(--primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-streamlit-launch {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(135deg, #FF4B4B 0%, #E11D48 100%);
+      color: white;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .btn-streamlit-launch:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(225, 29, 72, 0.35);
+    }
+
+    .btn-github {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #0F172A;
+      color: white;
+      text-decoration: none;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+
+    .btn-github:hover {
+      background: #334155;
+    }
+
+    /* 主容器 */
+    .main-wrapper {
+      flex: 1;
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 模式 1: 嵌入 Streamlit */
+    #view-streamlit {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 100px);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--card-border);
+      background: white;
+      position: relative;
+    }
+
+    .iframe-loader {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #FFFFFF;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+      transition: opacity 0.4s ease;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid #E2E8F0;
+      border-top: 4px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 16px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #streamlit-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      flex: 1;
+    }
+
+    /* 模式 2: 極速原生版 */
+    #view-native {
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .native-header-banner {
+      background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 60%, #38BDF8 100%);
+      color: white;
+      padding: 24px 30px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .native-header-banner h2 {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .native-header-banner p {
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .native-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 960px) {
+      .native-grid {
+        grid-template-columns: 1fr;
+      }
+      .nav-container {
+        flex-wrap: wrap;
+      }
+      #view-streamlit {
+        height: 75vh;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .quick-regions-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .btn-quick-reg {
+      padding: 6px 12px;
+      background: #EFF6FF;
+      color: var(--primary);
+      border: 1px solid #BFDBFE;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-quick-reg:hover, .btn-quick-reg.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    #leaflet-map {
+      height: 480px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid #E2E8F0;
+    }
+
+    .region-select-wrap {
+      margin-bottom: 18px;
+    }
+
+    .region-select-wrap label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .region-select-wrap select {
+      width: 100%;
+      padding: 10px 14px;
+      font-size: 1rem;
+      font-weight: 600;
+      border: 1px solid #CBD5E1;
+      border-radius: 10px;
+      background: white;
+      color: var(--text-main);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .region-select-wrap select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .metric-card {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+    }
+
+    .metric-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .metric-val {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--primary-dark);
+    }
+
+    .chart-container {
+      position: relative;
+      height: 280px;
+      margin-bottom: 22px;
+    }
+
+    .data-table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius-md);
+      border: 1px solid #E2E8F0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      text-align: left;
+    }
+
+    th {
+      background: #F1F5F9;
+      color: #475569;
+      font-weight: 700;
+      padding: 10px 16px;
+      border-bottom: 1px solid #CBD5E1;
+    }
+
+    td {
+      padding: 10px 16px;
+      border-bottom: 1px solid #E2E8F0;
+      color: var(--text-main);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: #F8FAFC;
+    }
+
+    /* 頁尾 */
+    footer {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 16px 20px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      border-top: 1px solid #E2E8F0;
+    }
+
+    footer a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
 
-  <div class="app-container">
-    <!-- 1. 頂部導覽列 (Site Header) -->
-    <header class="site-header glass-panel">
-      <div class="brand-section">
-        <div class="brand-logo-icon">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
-          </svg>
+  <!-- 頂部導航列 -->
+  <header class="top-nav">
+    <div class="nav-container">
+      <a href="./" class="nav-brand">
+        <span class="brand-icon">🌤️</span>
+        <div class="brand-text">
+          <h1>Taiwan Weather Forecast</h1>
+          <p>HW10 氣象預報系統 · SQLite data.db · CWA API</p>
         </div>
-        <div class="brand-title-wrap">
-          <h1 class="brand-title">Taiwan Weather 台灣氣象預報</h1>
-          <span class="brand-subtitle">中央氣象署 Open Data 局屬氣象站即時觀測</span>
-        </div>
-      </div>
+      </a>
 
-      <div class="header-actions">
-        <!-- 運行模式狀態徽章 (Demo vs Live) -->
-        <div id="app-mode-badge" class="mode-badge demo">
-          <span class="mode-dot"></span>
-          <span>展示模式 (全台真實模擬)</span>
-        </div>
-
-        <!-- 切換至 Streamlit App 連結 -->
-        <a href="https://hw1taiwan-weather-forecast-dqhwvp6gxevbtxpwiglajz.streamlit.app" target="_blank" rel="noopener noreferrer" class="btn-settings" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg, #FF4B4B 0%, #E11D48 100%); color:white; border:none; padding:8px 14px; border-radius:10px; font-weight:600; font-size:0.88rem; box-shadow:0 3px 10px rgba(225,29,72,0.3);">
+      <!-- 視圖切換器 -->
+      <div class="view-switcher">
+        <button id="tab-streamlit" class="view-btn active" onclick="switchView('streamlit')">
           <span>🌤️ Streamlit 雲端版</span>
-        </a>
-
-        <!-- API Key 設定按鈕 -->
-        <button id="btn-open-settings" class="btn-settings" aria-label="設定氣象署 API Key">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-            <circle cx="12" cy="12" r="3" />
-          </svg>
-          <span>API 設定</span>
+        </button>
+        <button id="tab-native" class="view-btn" onclick="switchView('native')">
+          <span>⚡ 極速獨立版 (免等待)</span>
         </button>
       </div>
-    </header>
 
-    <!-- 2. 搜尋列與快速區域篩選標籤 (Search & Region Filter) -->
-    <div class="filter-bar-card glass-panel">
-      <div class="search-box-wrapper">
-        <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-        <input type="text" id="county-search-input" class="search-input" placeholder="搜尋縣市名稱 (例：臺北、臺中、高雄...)" autocomplete="off">
-        <button id="search-clear-btn" class="search-clear-btn" aria-label="清除搜尋">&times;</button>
+      <!-- 快捷按鈕 -->
+      <div class="nav-actions">
+        <a href="https://hw1taiwan-weather-forecast-dqhwvp6gxevbtxpwiglajz.streamlit.app" target="_blank" rel="noopener noreferrer" class="btn-streamlit-launch" title="在獨立新分頁開啟 Streamlit 全螢幕">
+          <span>🚀 全螢幕開啟 Streamlit</span>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+        </a>
+        <a href="https://github.com/clairypeng-dotcom/Hw1Taiwan-weather-forecast" target="_blank" rel="noopener noreferrer" class="btn-github" title="前往 GitHub 專案倉庫">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主內容區 -->
+  <main class="main-wrapper">
+
+    <!-- 模式 1: 嵌入式 Streamlit 雲端系統 -->
+    <div id="view-streamlit">
+      <div id="iframe-loader" class="iframe-loader">
+        <div class="spinner"></div>
+        <h3 style="color:#1E3A8A; font-weight:700; margin-bottom:8px;">正在連線 Streamlit Community Cloud...</h3>
+        <p style="color:#64748B; font-size:0.9rem;">若雲端伺服器在睡眠喚醒中，亦可點擊右上角「⚡ 極速獨立版」立即瀏覽！</p>
+      </div>
+      <iframe
+        id="streamlit-frame"
+        src="https://hw1taiwan-weather-forecast-dqhwvp6gxevbtxpwiglajz.streamlit.app/?embed=true"
+        title="Taiwan Weather Forecast Streamlit App"
+        allow="geolocation; microphone; camera; midi; encrypted-media;"
+        onload="onIframeLoad()">
+      </iframe>
+    </div>
+
+    <!-- 模式 2: 極速原生版 (HW10 規範客戶端實作) -->
+    <div id="view-native">
+      <div class="native-header-banner">
+        <h2>🌤️ Taiwan Weather Forecast (HW10)</h2>
+        <p>基於 SQLite 預報資料庫 · 點擊台灣地圖標記即時切換地區 7 天高低溫預報</p>
       </div>
 
-      <div class="region-tabs-group" role="tablist">
-        <button class="region-tab-btn active" data-region="all">全台灣 (22 縣市)</button>
-        <button class="region-tab-btn" data-region="north">北部</button>
-        <button class="region-tab-btn" data-region="central">中部</button>
-        <button class="region-tab-btn" data-region="south">南部</button>
-        <button class="region-tab-btn" data-region="east">東部</button>
-        <button class="region-tab-btn" data-region="islands">外島澎金馬</button>
+      <div class="native-grid">
+        <!-- 左欄: 地圖與分區快捷鍵 -->
+        <div class="card">
+          <h3 class="card-title">🗺️ 台灣氣象預報地圖</h3>
+          <p style="font-size:0.85rem; color:#64748B; margin-bottom:12px;">💡 <b>點擊地標圓點</b>即可即時切換右側 7 天溫度趨勢：</p>
+
+          <div class="quick-regions-bar">
+            <button class="btn-quick-reg active" onclick="selectRegion('北部地區')">北部地區</button>
+            <button class="btn-quick-reg" onclick="selectRegion('中部地區')">中部地區</button>
+            <button class="btn-quick-reg" onclick="selectRegion('南部地區')">南部地區</button>
+            <button class="btn-quick-reg" onclick="selectRegion('東北部地區')">東北部地區</button>
+            <button class="btn-quick-reg" onclick="selectRegion('東部地區')">東部地區</button>
+            <button class="btn-quick-reg" onclick="selectRegion('東南部地區')">東南部地區</button>
+          </div>
+
+          <div id="leaflet-map"></div>
+        </div>
+
+        <!-- 右欄: 氣象預報圖表與表格 -->
+        <div class="card">
+          <div class="region-select-wrap">
+            <label for="select-region">請選擇預報地區 (regionName)：</label>
+            <select id="select-region" onchange="selectRegion(this.value)"></select>
+          </div>
+
+          <h3 id="forecast-title" class="card-title">📍 【北部地區】未來一週氣溫趨勢</h3>
+
+          <!-- 今日氣溫指標 -->
+          <div class="metrics-row">
+            <div class="metric-card">
+              <div class="metric-label">預報起始日</div>
+              <div id="m-date" class="metric-val" style="font-size:1.05rem;">--</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">最低氣溫 (MinT)</div>
+              <div id="m-mint" class="metric-val" style="color:#0284C7;">-- °C</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">最高氣溫 (MaxT)</div>
+              <div id="m-maxt" class="metric-val" style="color:#EA580C;">-- °C</div>
+            </div>
+          </div>
+
+          <!-- 折線圖 -->
+          <h4 style="font-size:1rem; font-weight:700; color:#334155; margin-bottom:8px;">📈 氣溫折線圖 (MaxT / MinT)</h4>
+          <div class="chart-container">
+            <canvas id="tempChart"></canvas>
+          </div>
+
+          <!-- 一週預報資料表 -->
+          <h4 style="font-size:1rem; font-weight:700; color:#334155; margin-bottom:8px;">📋 一週預報資料表</h4>
+          <div class="data-table-wrap">
+            <table id="forecast-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>MinT (°C)</th>
+                  <th>MaxT (°C)</th>
+                </tr>
+              </thead>
+              <tbody id="forecast-table-body"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- 3. 主排版區 (左側互動地圖 + 右側氣象主儀表板) -->
-    <main class="main-layout">
-      <!-- 左側：台灣向量互動地圖 -->
-      <aside class="map-sidebar">
-        <div class="glass-panel map-card">
-          <div class="map-card-header">
-            <h2 class="section-title">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
-                <line x1="8" y1="2" x2="8" y2="18"></line>
-                <line x1="16" y1="6" x2="16" y2="22"></line>
-              </svg>
-              <span>台灣互動氣象地圖</span>
-            </h2>
-            <span class="map-hint">點選縣市切換資訊</span>
-          </div>
+  </main>
 
-          <!-- 地圖掛載容器 -->
-          <div id="taiwan-map-container" class="taiwan-map-container">
-            <div class="map-loading-placeholder">地圖模組加載中...</div>
-          </div>
-        </div>
-      </aside>
+  <!-- 頁尾 -->
+  <footer>
+    <p>資料來源：<a href="https://opendata.cwa.gov.tw/" target="_blank" rel="noopener noreferrer">交通部中央氣象署 (CWA)</a> 開放資料平臺 · SQLite data.db / TemperatureForecasts</p>
+    <p style="margin-top:6px;">
+      <a href="https://hw1taiwan-weather-forecast-dqhwvp6gxevbtxpwiglajz.streamlit.app" target="_blank" rel="noopener noreferrer">Streamlit 雲端版</a> · 
+      <a href="https://github.com/clairypeng-dotcom/Hw1Taiwan-weather-forecast" target="_blank" rel="noopener noreferrer">GitHub 專案倉庫</a>
+    </p>
+  </footer>
 
-      <!-- 右側：氣象儀表板主要內容區 -->
-      <section class="dashboard-content">
-        <!-- 3.1 核心英雄氣象卡片 (Hero Card) -->
-        <div class="hero-weather-card">
-          <div class="hero-header">
-            <div class="hero-location-info">
-              <h2 id="hero-city-name" class="hero-city-title">臺北市</h2>
-              <span id="hero-station-name" class="hero-station-text">測站：臺北 (466920)</span>
-            </div>
-            <div id="hero-obs-time" class="hero-obs-badge">更新於 剛剛</div>
-          </div>
+  <script>
+    // 預報資料庫 (與 SQLite TemperatureForecasts 完全同步之 28 個地區未來 7 天資料)
+    let weatherData = {};
+    let currentRegion = '北部地區';
+    let leafletMap = null;
+    let markersMap = {};
+    let tempChart = null;
 
-          <div class="hero-main-display">
-            <div class="hero-temp-wrapper">
-              <span id="hero-temp-val" class="hero-temp-value">26</span>
-              <span class="hero-temp-unit">°C</span>
-            </div>
+    // 28 地區座標
+    const REGION_COORDINATES = {
+      "北部地區": [25.045, 121.525],
+      "中部地區": [24.160, 120.670],
+      "南部地區": [22.990, 120.215],
+      "東北部地區": [24.700, 121.740],
+      "東部地區": [23.985, 121.600],
+      "東南部地區": [22.760, 121.145],
+      "基隆市": [25.1276, 121.7392],
+      "臺北市": [25.0375, 121.5637],
+      "新北市": [25.0118, 121.4628],
+      "桃園市": [24.9936, 121.3010],
+      "新竹市": [24.8138, 120.9675],
+      "新竹縣": [24.8387, 121.0177],
+      "苗栗縣": [24.5602, 120.8214],
+      "臺中市": [24.1477, 120.6736],
+      "彰化縣": [24.0518, 120.5161],
+      "南投縣": [23.9609, 120.9719],
+      "雲林縣": [23.7092, 120.4313],
+      "嘉義市": [23.4800, 120.4491],
+      "嘉義縣": [23.4518, 120.2555],
+      "臺南市": [22.9997, 120.2270],
+      "高雄市": [22.6273, 120.3014],
+      "屏東縣": [22.5519, 120.5487],
+      "宜蘭縣": [24.7021, 121.7377],
+      "花蓮縣": [23.9872, 121.6016],
+      "臺東縣": [22.7583, 121.1444],
+      "澎湖縣": [23.5712, 119.5793],
+      "金門縣": [24.4491, 118.3766],
+      "連江縣": [26.1558, 119.9519]
+    };
 
-            <div class="hero-condition-box">
-              <img id="hero-weather-icon" src="assets/icons/partly-cloudy.svg" alt="天氣現象圖示" class="hero-weather-icon-img">
-              <div class="hero-condition-desc">
-                <span id="hero-condition-text" class="hero-condition-name">晴時多雲</span>
-                <div class="hero-range-badge">
-                  <span>最高 <strong id="hero-today-high" class="high-tag">30°</strong></span>
-                  <span>/</span>
-                  <span>最低 <strong id="hero-today-low" class="low-tag">22°</strong></span>
-                </div>
-              </div>
-            </div>
-          </div>
+    function onIframeLoad() {
+      const loader = document.getElementById('iframe-loader');
+      if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => { loader.style.display = 'none'; }, 400);
+      }
+    }
 
-          <!-- 六大氣象觀測指標 -->
-          <div class="metrics-grid">
-            <div class="metric-item">
-              <span class="metric-title">體感溫度</span>
-              <span id="metric-apparent" class="metric-value">28°C</span>
-              <span id="metric-comfort" class="metric-sub">舒適</span>
-            </div>
+    // 視圖切換
+    function switchView(mode) {
+      const vStreamlit = document.getElementById('view-streamlit');
+      const vNative = document.getElementById('view-native');
+      const tabStreamlit = document.getElementById('tab-streamlit');
+      const tabNative = document.getElementById('tab-native');
 
-            <div class="metric-item">
-              <span class="metric-title">相對濕度</span>
-              <span id="metric-humidity" class="metric-value">68%</span>
-              <span class="metric-sub">RH 指標</span>
-            </div>
+      if (mode === 'native') {
+        vStreamlit.style.display = 'none';
+        vNative.style.display = 'flex';
+        tabStreamlit.classList.remove('active');
+        tabNative.classList.add('active');
+        initNativeApp();
+        if (leafletMap) {
+          setTimeout(() => { leafletMap.invalidateSize(); }, 200);
+        }
+      } else {
+        vStreamlit.style.display = 'flex';
+        vNative.style.display = 'none';
+        tabStreamlit.classList.add('active');
+        tabNative.classList.remove('active');
+      }
+    }
 
-            <div class="metric-item">
-              <span class="metric-title">降雨機率</span>
-              <span id="metric-rain" class="metric-value">20%</span>
-              <span class="metric-sub">降水量 0.0mm</span>
-            </div>
+    // 初始化極速原生版
+    async function initNativeApp() {
+      if (Object.keys(weatherData).length === 0) {
+        try {
+          const resp = await fetch('./data.json');
+          if (resp.ok) {
+            weatherData = await resp.json();
+          }
+        } catch (e) {
+          console.warn('載入 data.json 失敗，使用內建資料', e);
+        }
+      }
 
-            <div class="metric-item">
-              <span class="metric-title">平均風速</span>
-              <span id="metric-wind" class="metric-value">2.5 m/s</span>
-              <span id="metric-wind-dir" class="metric-sub">偏東風</span>
-            </div>
+      // 填充下拉選單
+      const sel = document.getElementById('select-region');
+      if (sel.children.length === 0) {
+        const priority = ["北部地區", "中部地區", "南部地區", "東北部地區", "東部地區", "東南部地區"];
+        const allKeys = Object.keys(weatherData);
+        const sortedKeys = [];
+        priority.forEach(p => { if (allKeys.includes(p)) sortedKeys.push(p); });
+        allKeys.sort().forEach(k => { if (!sortedKeys.includes(k)) sortedKeys.push(k); });
 
-            <div class="metric-item">
-              <span class="metric-title">紫外線指數</span>
-              <span id="metric-uv" class="metric-value">7 級</span>
-              <span class="metric-sub">高量級</span>
-            </div>
+        sortedKeys.forEach(r => {
+          const opt = document.createElement('option');
+          opt.value = r;
+          opt.textContent = r;
+          sel.appendChild(opt);
+        });
+      }
 
-            <div class="metric-item">
-              <span class="metric-title">大氣壓力</span>
-              <span id="metric-pressure" class="metric-value">1013 hPa</span>
-              <span class="metric-sub">正常氣壓</span>
-            </div>
-          </div>
-        </div>
+      // 初始化 Leaflet 地圖
+      if (!leafletMap) {
+        leafletMap = L.map('leaflet-map').setView([23.8, 121.0], 7);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 18,
+          attribution: '© OpenStreetMap'
+        }).addTo(leafletMap);
 
-        <!-- 3.2 未來 24 小時時段天氣預報 -->
-        <div class="glass-panel hourly-section">
-          <h3 class="section-title">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            <span>未來 24 小時時段預報</span>
-          </h3>
-          <div id="hourly-forecast-list" class="hourly-forecast-container">
-            <!-- 由 UI 動態生成 8 組預報卡片 -->
-          </div>
-        </div>
+        // 放置地標標記
+        for (const [rName, coords] of Object.entries(REGION_COORDINATES)) {
+          const isSel = (rName === currentRegion);
+          const marker = L.circleMarker(coords, {
+            radius: isSel ? 13 : 8,
+            color: '#FFFFFF',
+            weight: isSel ? 3 : 2,
+            fillColor: isSel ? '#DC2626' : '#2563EB',
+            fillOpacity: 0.9
+          }).addTo(leafletMap);
 
-        <!-- 3.3 未來數日高低溫趨勢折線圖 (Canvas) -->
-        <div class="glass-panel trend-section">
-          <div class="trend-header-row">
-            <h3 class="section-title" style="margin-bottom:0;">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-              </svg>
-              <span>未來 7 日溫度趨勢曲線</span>
-            </h3>
-            <div class="trend-legend">
-              <div class="legend-item">
-                <span class="legend-dot high"></span>
-                <span>最高溫</span>
-              </div>
-              <div class="legend-item">
-                <span class="legend-dot low"></span>
-                <span>最低溫</span>
-              </div>
-            </div>
-          </div>
+          marker.bindTooltip(rName, { direction: 'top' });
+          marker.on('click', () => {
+            selectRegion(rName);
+          });
+          markersMap[rName] = marker;
+        }
+      }
 
-          <div class="chart-wrapper">
-            <canvas id="trend-canvas"></canvas>
-          </div>
-        </div>
+      renderForecast();
+    }
 
-        <!-- 3.4 全台 22 縣市氣象速覽清單 -->
-        <div class="glass-panel counties-overview-section">
-          <h3 class="section-title">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="3" width="7" height="7"></rect>
-              <rect x="14" y="3" width="7" height="7"></rect>
-              <rect x="14" y="14" width="7" height="7"></rect>
-              <rect x="3" y="14" width="7" height="7"></rect>
-            </svg>
-            <span>全台各縣市氣象速覽</span>
-          </h3>
-          <div id="county-cards-grid" class="county-cards-grid">
-            <!-- 由 UI 動態生成全台卡片 -->
-          </div>
-        </div>
-      </section>
-    </main>
+    // 選取地區
+    function selectRegion(regionName) {
+      if (!weatherData[regionName] && !REGION_COORDINATES[regionName]) return;
+      currentRegion = regionName;
 
-    <!-- 頁尾宣告 -->
-    <footer class="site-footer">
-      <p>資料來源：<a href="https://opendata.cwa.gov.tw/" target="_blank" rel="noopener noreferrer">中華民國交通部中央氣象署開放資料平臺 (CWA Open Data)</a></p>
-      <p style="margin-top: 6px; font-size: 0.85rem; color: #64748B;">
-        <a href="https://hw1taiwan-weather-forecast-dqhwvp6gxevbtxpwiglajz.streamlit.app" target="_blank" rel="noopener noreferrer" style="color:#2563EB; font-weight:600; text-decoration:none;">🌤️ 前往 HW10 Streamlit 雲端氣象系統</a> · 
-        <a href="https://github.com/clairypeng-dotcom/Hw1Taiwan-weather-forecast" target="_blank" rel="noopener noreferrer" style="color:#64748B; text-decoration:none;">GitHub 專案倉庫</a>
-      </p>
-    </footer>
-  </div>
+      // 更新選單
+      const sel = document.getElementById('select-region');
+      if (sel) sel.value = regionName;
 
-  <!-- 4. 浮動地圖提示卡 (Map Tooltip) -->
-  <div id="map-tooltip" class="map-tooltip" role="tooltip"></div>
+      // 更新快捷按鈕樣式
+      document.querySelectorAll('.btn-quick-reg').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent === regionName);
+      });
 
-  <!-- 5. 訊息提示容器 (Toast Notification Container) -->
-  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+      // 更新地圖標記樣式
+      for (const [rName, marker] of Object.entries(markersMap)) {
+        const isSel = (rName === currentRegion);
+        marker.setStyle({
+          radius: isSel ? 13 : 8,
+          fillColor: isSel ? '#DC2626' : '#2563EB',
+          weight: isSel ? 3 : 2
+        });
+        if (isSel) marker.bringToFront();
+      }
 
-  <!-- 6. API 設定與說明彈窗 (Settings Modal) -->
-  <div id="settings-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="settings-title">
-    <div class="modal-dialog">
-      <div class="modal-header">
-        <h3 id="settings-title" class="modal-title">氣象資料來源與 API 設定</h3>
-        <button id="btn-close-modal" class="modal-close-btn" aria-label="關閉彈窗">&times;</button>
-      </div>
+      renderForecast();
+    }
 
-      <div class="modal-body">
-        <div class="api-guide-box">
-          <strong>💡 如何取得中央氣象署 API 授權碼？</strong>
-          <ol>
-            <li>前往 <a href="https://opendata.cwa.gov.tw/" target="_blank" rel="noopener noreferrer">氣象資料開放平臺</a> 免費註冊帳號。</li>
-            <li>登入後點擊右上角「會員資訊」➔「取得授權碼」。</li>
-            <li>將授權碼（格式如 <code>CWA-XXXXXXXX-...</code>）貼入下方輸入框即可連線即時氣象局測站！</li>
-          </ol>
-        </div>
+    // 渲染預報圖表與表格
+    function renderForecast() {
+      const records = weatherData[currentRegion] || [];
+      document.getElementById('forecast-title').textContent = `📍 【${currentRegion}】未來一週氣溫趨勢`;
 
-        <div class="form-group">
-          <label for="input-api-key" class="form-label">中央氣象署 API 授權碼 (Authorization Key)</label>
-          <input type="text" id="input-api-key" class="input-text" placeholder="例：CWA-12345678-ABCD-EF01-2345-6789ABCDEF01" autocomplete="off">
-          <span class="form-hint">🔒 安全保證：金鑰僅保存在您本機瀏覽器的 LocalStorage，絕不上傳或提交至 GitHub。</span>
-        </div>
-      </div>
+      if (records.length === 0) return;
 
-      <div class="modal-footer">
-        <button id="btnClearApiKey" class="btn-secondary" style="display:none;"></button>
-        <button id="btn-switch-demo" class="btn-secondary">使用展示模式</button>
-        <button id="btn-clear-api-key" class="btn-secondary">清除金鑰</button>
-        <button id="btn-save-api-key" class="btn-primary">儲存並套用</button>
-      </div>
-    </div>
-  </div>
+      const first = records[0];
+      document.getElementById('m-date').textContent = first.date;
+      document.getElementById('m-mint').textContent = `${first.minT} °C`;
+      document.getElementById('m-maxt').textContent = `${first.maxT} °C`;
 
-  <!-- JavaScript 腳本引入 (依照相依順序) -->
-  <script src="js/config.js"></script>
-  <script src="js/demo-data.js"></script>
-  <script src="js/api.js"></script>
-  <script src="js/chart.js"></script>
-  <script src="js/map.js"></script>
-  <script src="js/ui.js"></script>
-  <script src="js/app.js"></script>
+      // 渲染表格
+      const tbody = document.getElementById('forecast-table-body');
+      tbody.innerHTML = '';
+      records.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-weight:600;">${row.date}</td>
+          <td style="color:#0284C7; font-weight:700;">${row.minT} °C</td>
+          <td style="color:#EA580C; font-weight:700;">${row.maxT} °C</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // 渲染 Chart.js 雙曲線折線圖
+      const ctx = document.getElementById('tempChart').getContext('2d');
+      const labels = records.map(r => r.date);
+      const maxTemps = records.map(r => r.maxT);
+      const minTemps = records.map(r => r.minT);
+
+      if (tempChart) {
+        tempChart.destroy();
+      }
+
+      tempChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: '最高溫 MaxT (°C)',
+              data: maxTemps,
+              borderColor: '#F97316',
+              backgroundColor: 'rgba(249, 115, 22, 0.1)',
+              borderWidth: 3,
+              pointRadius: 5,
+              pointBackgroundColor: '#F97316',
+              tension: 0.3
+            },
+            {
+              label: '最低溫 MinT (°C)',
+              data: minTemps,
+              borderColor: '#0284C7',
+              backgroundColor: 'rgba(2, 132, 199, 0.1)',
+              borderWidth: 3,
+              pointRadius: 5,
+              pointBackgroundColor: '#0284C7',
+              tension: 0.3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: { font: { family: 'Noto Sans TC', weight: '600' } }
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false
+            }
+          },
+          scales: {
+            y: {
+              title: { display: true, text: '氣溫 (°C)', font: { weight: 'bold' } },
+              grid: { color: '#E2E8F0' }
+            },
+            x: {
+              grid: { display: false }
+            }
+          }
+        }
+      });
+    }
+
+    // 自動隱藏載入動畫保護機制 (超過 4 秒自動移除以避免卡住)
+    setTimeout(() => { onIframeLoad(); }, 4000);
+  </script>
 </body>
 </html>
