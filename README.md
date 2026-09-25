@@ -1,133 +1,146 @@
-# 🌤️ Taiwan Weather Forecast 台灣氣象預報網站
+# 🌤️ Taiwan Weather Forecast (HW10)
 
-一個美觀、現代化、純原生前端開發的台灣天氣預報 Web App。視覺設計採高質感的藍白氣象儀表板風格，整合交通部中央氣象署（CWA）開放資料平臺 API，支援互動式台灣向量地圖、24 小時時段預報、7 日溫度趨勢曲線圖表與全台 22 縣市即時氣象觀測。
-
----
-
-## 🌟 核心特色與功能
-
-1. **🗺️ 互動式台灣向量地圖 (SVG)**：
-   - 包含台灣本島 19 縣市與澎湖、金門、連江（馬祖）離島。
-   - 支援滑鼠懸浮預覽氣溫與天氣現象（Tooltip 跟隨）。
-   - 點擊縣市即時切換右側氣象儀表板，並同步高亮當前選取縣市。
-
-2. **📊 藍白現代氣象儀表板**：
-   - **核心資訊**：目前氣溫、體感溫度、天氣現象、今日最高溫與最低溫。
-   - **六大關鍵指標**：相對濕度 (%)、降雨機率與降雨量 (mm)、平均風速與風向、紫外線指數 (UV)、大氣壓力 (hPa)、舒適度簡評。
-   - **微動畫回饋**：微浮動天氣圖示、氣溫進場彈跳轉場效果。
-
-3. **⏱️ 未來 24 小時時段預報**：
-   - 橫向流暢滾動的時段預報卡片，標示時段、對應天氣圖示、預測氣溫與降雨機率。
-
-4. **📈 未來 7 日溫度趨勢曲線圖**：
-   - 使用輕量級原生 HTML5 Canvas 繪製高解析度（Retina 2x/3x 相容）平滑貝茲曲線。
-   - 同時展示未來一週最高溫與最低溫雙軌曲線、漸層填色與游標懸浮參考輔助線。
-
-5. **🔍 縣市搜尋與分區快速選取**：
-   - 支援縣市即時搜尋（輸入關鍵字即時過濾）。
-   - 提供「全台灣、北部、中部、南部、東部、外島」分區頁籤，一鍵快速篩選。
-
-6. **🔒 API 安全性與 Demo 展示模式**：
-   - **絕不將 API Key 寫死於原始碼**：避免金鑰提交至 GitHub 或公開外洩。
-   - **預設 Demo 模式**：未設定 API Key 時自動啟用高品質模擬數據庫，隨開隨用。
-   - **LocalStorage 安全存放**：右上角提供「API 設定」彈窗，使用者輸入的中央氣象署授權碼僅保存在本機瀏覽器。
-   - **自動容錯降級**：當 API 發生網路問題、額度超限或金鑰無效時，自動顯示友善提示並安全切換回展示模式。
+本專案是一個完整的台灣天氣預報系統，支援 **雙軌架構**：
+1. **Python + CWA API + SQLite + Streamlit + Folium** (HW10 作業核心架構)
+2. **純原生前端 Web App (HTML/CSS/JS)** (支援 GitHub Pages 靜態託管展示)
 
 ---
 
-## 🛠️ 技術架構
-
-- **HTML5**：語意化標籤架構、SEO Meta 標籤。
-- **Vanilla CSS (純原生 CSS)**：自訂色彩變數系統、玻璃擬態 (Glassmorphism)、微陰影與響應式斷點（支援桌面、平板、手機）。
-- **Vanilla JavaScript (ES6+)**：純原生 JavaScript 模組化設計（地圖、圖表、UI、API、設定獨立分離），無須任何 npm build 或 Webpack 編譯。
-- **資料來源**：
-  - 中央氣象署 (CWA) Open Data API：`O-A0003-001` (局屬氣象站-現在天氣觀測報告)。
-
----
-
-## 📁 檔案結構
+## 🏗️ 系統架構流程 (HW10 Pipeline)
 
 ```text
-0923hw1/
-├── index.html              # 主頁面結構與儀表板佈局
-├── css/
-│   ├── style.css           # 全域變數、色彩系統與響應式網格
-│   ├── dashboard.css       # 天氣英雄卡、指標格、24h預報與圖表佈局
-│   ├── map.css             # 台灣 SVG 地圖互動樣式與懸浮提示 Tooltip
-│   └── components.css      # 導覽列、搜尋列、分頁籤、Modal 與 Toast
-├── js/
-│   ├── config.js           # API Key 存取與運行模式 (Demo/Live) 管理
-│   ├── demo-data.js        # 全台 22 縣市擬真氣象與預報模擬資料庫
-│   ├── api.js              # CWA O-A0003-001 API 連線、解析與容錯轉換
-│   ├── map.js              # 台灣 SVG 地圖載入、Hover/點擊事件與連動
-│   ├── chart.js            # 原生 Canvas 雙溫度趨勢曲線繪製模組
-│   ├── ui.js               # 畫面資料渲染與 DOM 更新邏輯
-│   └── app.js              # 主入口協調腳本
-├── assets/
-│   ├── icons/              # 晴天、多雲、陰、雨、雷雨等純向量 SVG 圖示
-│   └── taiwan-map.svg      # 台灣 22 縣市向量地圖
-├── .gitignore              # 忽略暫存檔與金鑰檔案
-└── README.md               # 專案說明手冊
+中央氣象署 CWA Open Data API (F-D0047-091)
+               ↓ (requests)
+        fetch_weather.py
+               ↓ (Raw JSON)
+        parse_weather.py
+               ↓ (regionName / dataDate / minT / maxT)
+          database.py
+               ↓ (Upsert / 防止重複)
+       SQLite: data.db (TemperatureForecasts)
+               ↓ (SQL Query)
+             app.py
+               ↓ (Streamlit + Folium)
+    互動式氣象地圖與 7 天溫度趨勢圖表
 ```
 
 ---
 
-## 💻 本機啟動方式 (localhost:8080)
+## 📋 系統環境與需求
 
-本專案為靜態網頁，您可以直接使用常見的本機伺服器在 `8080` 連接埠啟動：
-
-### 方式一：使用 Python 3（Mac / Linux / Windows 內建，推薦）
-
-開啟終端機（Terminal）進入專案目錄，執行：
-
-```bash
-python3 -m http.server 8080
-```
-
-啟動後於瀏覽器開啟：`http://localhost:8080`
-
-### 方式二：使用 Node.js `npx http-server`
-
-若您電腦有安裝 Node.js，可直接執行：
-
-```bash
-npx -y http-server -p 8080 -c-1
-```
-
-### 方式三：使用 VS Code Live Server 擴充套件
-
-直接在 VS Code 中開啟專案目錄，右鍵點擊 `index.html` 選擇「Open with Live Server」。
+- **作業系統**：macOS / Linux / Windows
+- **Python 版本**：Python 3.9 或以上 (建議 Python 3.10 / 3.11)
 
 ---
 
-## 🔑 如何設定中央氣象署 API Key (授權碼)
+## 📦 安裝步驟 (Installation)
 
-1. 前往 [中央氣象署開放資料平臺](https://opendata.cwa.gov.tw/) 免費註冊會員並登入。
-2. 點擊右上角「使用者帳號」➔「取得授權碼」。
-3. 複製您的 API 授權碼（格式通常為 `CWA-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX`）。
-4. 在本網站點擊右上角「**API 設定**」按鈕。
-5. 將授權碼貼入輸入框，點擊「**儲存並套用**」。
-6. 網站將立即透過 `O-A0003-001` 連線至氣象署局屬測站，頂部狀態徽章將顯示「**中央氣象署 API (即時連線)**」！
-
-> **🔒 隱私與安全性聲明**：您的 API 授權碼僅會加密保存在您個人瀏覽器的 `localStorage` 中，不會傳送至任何第三方伺服器，更不會被提交至 GitHub。
-
----
-
-## 🚀 部署至 GitHub Pages 步驟
-
-本專案使用純靜態檔案與相對路徑設計，無須任何編譯打包步驟即可直接發布至 GitHub Pages：
-
-1. **推送本地程式碼至 GitHub**：
-   專案已設定好遠端倉庫，在終端機直接執行：
+1. **進入專案目錄**：
    ```bash
-   git push -u origin main
+   cd /Users/pengjie/Documents/0923hw1
    ```
 
-2. **啟用 GitHub Pages**：
-   - 進入您的專案頁面：[https://github.com/clairypeng-dotcom/Hw1Taiwan-weather-forecast/settings/pages](https://github.com/clairypeng-dotcom/Hw1Taiwan-weather-forecast/settings/pages)
-   - 在「**Build and deployment**」區塊：
-     - Source 選擇：`Deploy from a branch`
-     - Branch 選擇：`main`，資料夾選擇：`/ (root)`
-   - 點擊「**Save**」。
-   - 等待約 1~2 分鐘後，即可透過專屬網址公開瀏覽您的氣象預報網站：
-     👉 **[https://clairypeng-dotcom.github.io/Hw1Taiwan-weather-forecast/](https://clairypeng-dotcom.github.io/Hw1Taiwan-weather-forecast/)**asdfasfd
+2. **安裝所需 Python 套件**：
+   ```bash
+   pip install -r requirements.txt
+   ```
+   *(套件包含：requests, pandas, streamlit, folium, streamlit-folium)*
+
+---
+
+## 🔑 CWA API Key 設定方式
+
+本專案**絕不將 API Key 寫死於程式碼中**。您可以透過以下兩種方式設定中央氣象署 API Key：
+
+### 方式一：建立 `.env` 檔案（推薦）
+在專案根目錄下建立 `.env` 檔案，填入您的 API 授權碼：
+```env
+CWA_API_KEY=CWA-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+```
+
+### 方式二：設定環境變數
+在終端機中匯出環境變數：
+```bash
+export CWA_API_KEY="CWA-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+```
+
+> **💡 取得授權碼教學**：前往 [中央氣象署開放資料平臺](https://opendata.cwa.gov.tw/) 免費註冊會員，於「取得授權碼」複製您的專屬 Key。  
+> **💡 離線測試 (Demo Mode)**：若尚未提供 API Key，系統具備自動容錯回退機制，會自動使用相容 Schema 的內建模擬預報資料，保證各模組皆可獨立執行！
+
+---
+
+## 🛠️ 各模組獨立執行方式
+
+### 1. 抓取天氣資料 (Fetch)
+測試使用 Python requests 呼叫 CWA API：
+```bash
+python fetch_weather.py
+```
+* 特點：包含 timeout 逾時機制、HTTP 例外捕獲，保留原始 JSON 結構。
+
+### 2. 解析預報 JSON (Parse)
+測試從原始 JSON 解析 22 縣市的一週 MinT / MaxT：
+```bash
+python parse_weather.py
+```
+* 特點：專門解析 `records`、`locations`、`weatherElement`，提取 `regionName`、`dataDate`、`minT`、`maxT`，遇到缺失欄位自動防護不崩潰。
+
+### 3. 建立並同步 SQLite 資料庫 (Database)
+建立 `data.db` 資料庫與 `TemperatureForecasts` 資料表：
+```bash
+python database.py
+```
+* **資料表欄位**：
+  - `id` (INTEGER PRIMARY KEY AUTOINCREMENT)
+  - `regionName` (TEXT NOT NULL)
+  - `dataDate` (TEXT NOT NULL)
+  - `minT` (REAL)
+  - `maxT` (REAL)
+* **防重複機制**：使用 `UNIQUE(regionName, dataDate)` 與 `INSERT ... ON CONFLICT DO UPDATE` (Upsert)，重複執行不會累積重複資料。
+
+---
+
+## 🚀 啟動 Streamlit Web App
+
+執行以下指令啟動 Streamlit 視覺化介面：
+
+```bash
+streamlit run app.py
+```
+
+啟動後於瀏覽器開啟：`http://localhost:8501`
+
+### 網頁主要功能：
+- 🗺️ **Folium 台灣互動地圖**：標示全台縣市中心點，點擊地圖標記即顯示該縣市當日與未來高低溫預報。
+- 📍 **縣市選擇器**：下拉選單快速切換 22 縣市。
+- 📈 **未來 7 日氣溫折線圖**：自動繪製最低溫 (MinT) 與最高溫 (MaxT) 雙軌趨勢。
+- 🔄 **手動同步按鈕**：側邊欄提供一鍵呼叫 CWA API 並即時更新 SQLite `data.db`。
+- 📋 **SQLite 資料檢視表**：直接呈現 `TemperatureForecasts` 資料表原始欄位。
+
+---
+
+## 🌐 保留之靜態前端網站 (GitHub Pages)
+
+原有的純前端靜態網站依然完整保留：
+- **靜態檔案**：`index.html`、`css/`、`js/`、`assets/`
+- **本機執行**：`python3 -m http.server 8080` (開啟 `http://localhost:8080`)
+- **GitHub 部署頁面**：[https://clairypeng-dotcom.github.io/Hw1Taiwan-weather-forecast/](https://clairypeng-dotcom.github.io/Hw1Taiwan-weather-forecast/)
+
+---
+
+## ☁️ 部署至 Streamlit Community Cloud
+
+本專案已完全適配 Streamlit Community Cloud 免費雲端部署：
+
+1. 前往 [Streamlit Community Cloud](https://share.streamlit.io/) 並使用 GitHub 帳號登入。
+2. 點擊 **"Create app"** ➔ **"Deploy an app"**。
+3. 填入專案設定：
+   - **Repository**: `clairypeng-dotcom/Hw1Taiwan-weather-forecast`
+   - **Branch**: `main`
+   - **Main file path**: `app.py`
+4. *(選填)* 若有 CWA API Key，可點擊 **"Advanced settings"** ➔ **"Secrets"**，填入：
+   ```toml
+   CWA_API_KEY = "CWA-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+   ```
+5. 點擊 **"Deploy!"**，數分鐘內即可完成雲端上線！
+

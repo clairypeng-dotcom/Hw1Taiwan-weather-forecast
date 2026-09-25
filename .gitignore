@@ -12,3 +12,8 @@ Thumbs.db
 .env
 .env.local
 config.local.js
+
+# Python cache
+__pycache__/
+*.py[cod]
+
