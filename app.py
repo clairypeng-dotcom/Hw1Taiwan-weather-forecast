@@ -206,6 +206,42 @@ def query_all_latest_temps() -> dict[str, dict]:
         return {}
 
 
+def get_dates_from_db() -> list[str]:
+    """從 SQLite data.db 動態查詢所有可用預報日期 (dataDate)"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT DISTINCT dataDate FROM TemperatureForecasts ORDER BY dataDate ASC;")
+        rows = cursor.fetchall()
+        conn.close()
+        return [r[0] for r in rows if r[0]]
+    except Exception:
+        return []
+
+
+def query_all_temps_by_date(target_date: str) -> dict[str, dict]:
+    """查詢所有地區在指定預報日期的氣溫，用於地圖標記著色與 Popup 顯示"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        query = """
+        SELECT regionName, dataDate, minT, maxT
+        FROM TemperatureForecasts
+        WHERE dataDate = ?;
+        """
+        df = pd.read_sql_query(query, conn, params=(target_date,))
+        conn.close()
+        result = {}
+        for _, row in df.iterrows():
+            result[row["regionName"]] = {
+                "date": row["dataDate"],
+                "minT": row["minT"],
+                "maxT": row["maxT"]
+            }
+        return result
+    except Exception:
+        return {}
+
+
 def main():
     # 頂部藍白儀表板橫幅
     st.markdown("""
@@ -231,10 +267,14 @@ def main():
             st.error(error_msg)
             return
 
-    # 動態從 SQLite 取得地區清單
+    # 動態從 SQLite 取得地區與日期清單
     regions = get_regions_from_db()
+    dates = get_dates_from_db()
     if not regions:
         st.warning("⚠️ 無法從資料庫取得任何地區清單。")
+        return
+    if not dates:
+        st.warning("⚠️ 無法從資料庫取得任何預報日期清單。")
         return
 
     # 關鍵狀態管理：若有地圖點選或捷徑按鈕觸發的 pending_region，需在 selectbox 建立前設定
@@ -244,15 +284,34 @@ def main():
     if "selected_region" not in st.session_state or st.session_state["selected_region"] not in regions:
         st.session_state["selected_region"] = "北部地區" if "北部地區" in regions else regions[0]
 
-    # 側邊欄控制：直接綁定 key="selected_region"，完美支援雙向同步
-    st.sidebar.markdown("### 📍 地區選擇")
+    if "selected_date" not in st.session_state or st.session_state["selected_date"] not in dates:
+        st.session_state["selected_date"] = dates[0]
+
+    # 側邊欄控制：地區與日期選擇下拉選單
+    st.sidebar.markdown("### 📍 地區與日期選擇")
     st.sidebar.selectbox(
         "請選擇預報地區 (regionName)：",
         options=regions,
         key="selected_region"
     )
+    st.sidebar.selectbox(
+        "📅 請選擇預報日期 (dataDate)：",
+        options=dates,
+        key="selected_date"
+    )
 
     current_region = st.session_state["selected_region"]
+    current_date = st.session_state["selected_date"]
+
+    # 側邊欄地圖視覺模式切換
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("### 🎨 地圖視覺模式")
+    map_color_mode = st.sidebar.radio(
+        "地圖圓點著色依據：",
+        ["🌡️ 依氣溫色階 (MaxT)", "🍃 依空氣品質 (AQI)"],
+        index=0,
+        help="切換地圖上 28 個地區圓點的著色依據：以預報最高氣溫或即時空氣品質指標著色。"
+    )
 
     # 側邊欄重新整理按鈕
     st.sidebar.markdown("---")
@@ -267,12 +326,17 @@ def main():
             except Exception as e:
                 st.sidebar.error(f"更新失敗: {e}")
 
+    # 取得指定預報日期的氣象與即時空氣品質資料
+    all_latest = query_all_temps_by_date(current_date)
+    from air_quality import fetch_all_air_quality, get_temp_info, get_aqi_info
+    all_aq = fetch_all_air_quality()
+
     # 主畫面佈局：左側互動地圖 (Folium) ＋ 右側 7 天氣溫趨勢圖表
     col_map, col_forecast = st.columns([1, 1], gap="medium")
 
     with col_map:
-        st.markdown("### 🗺️ 台灣氣象預報地圖")
-        st.caption("💡 **點擊地圖上的地標圓點**，右側將即時切換為該地區之 7 天預報！")
+        st.markdown(f"### 🗺️ 台灣氣象預報地圖 (📅 {current_date})")
+        st.caption(f"💡 目前地圖呈現 **{current_date}** 之氣象預報。點擊地標圓點即可即時切換地區！")
 
         # 快速分區標籤快捷鈕 (點擊可立即切換)
         st.markdown("**常用分區捷徑：**")
@@ -286,14 +350,38 @@ def main():
                     st.session_state["pending_region"] = q_reg
                     st.rerun()
 
+        # 地圖色階圖例 (Legend) 標籤
+        if "氣溫" in map_color_mode:
+            st.markdown("""
+            <div style="background: white; border: 1px solid #E2E8F0; border-radius: 8px; padding: 6px 10px; margin-bottom: 10px; font-size: 0.78rem; display: flex; flex-wrap: wrap; gap: 5px; align-items: center;">
+                <b style="color:#1E3A8A; margin-right:4px;">🌡️ 氣溫圖例：</b>
+                <span style="background:#2563EB; color:white; padding:2px 6px; border-radius:4px; font-weight:600;">&lt;16°C 寒冷</span>
+                <span style="background:#06B6D4; color:white; padding:2px 6px; border-radius:4px; font-weight:600;">16-20°C 涼爽</span>
+                <span style="background:#10B981; color:white; padding:2px 6px; border-radius:4px; font-weight:600;">20-24°C 舒適</span>
+                <span style="background:#EAB308; color:black; padding:2px 6px; border-radius:4px; font-weight:600;">24-28°C 溫和</span>
+                <span style="background:#F97316; color:white; padding:2px 6px; border-radius:4px; font-weight:600;">28-32°C 炎熱</span>
+                <span style="background:#EF4444; color:white; padding:2px 6px; border-radius:4px; font-weight:600;">&ge;32°C 酷熱</span>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown("""
+            <div style="background: white; border: 1px solid #E2E8F0; border-radius: 8px; padding: 6px 10px; margin-bottom: 10px; font-size: 0.78rem; display: flex; flex-wrap: wrap; gap: 5px; align-items: center;">
+                <b style="color:#1E3A8A; margin-right:4px;">🍃 空品圖例 (AQI)：</b>
+                <span style="background:#10B981; color:white; padding:2px 6px; border-radius:4px; font-weight:600;">0-50 良好</span>
+                <span style="background:#EAB308; color:black; padding:2px 6px; border-radius:4px; font-weight:600;">51-100 普通</span>
+                <span style="background:#F97316; color:white; padding:2px 6px; border-radius:4px; font-weight:600;">101-150 敏感族群不健康</span>
+                <span style="background:#EF4444; color:white; padding:2px 6px; border-radius:4px; font-weight:600;">151-200 不健康</span>
+                <span style="background:#8B5CF6; color:white; padding:2px 6px; border-radius:4px; font-weight:600;">201-300 非常不健康</span>
+                <span style="background:#881337; color:white; padding:2px 6px; border-radius:4px; font-weight:600;">300+ 危害</span>
+            </div>
+            """, unsafe_allow_html=True)
+
         # 建立 Folium 地圖，中心對準台灣本島 (使用穩定之 OpenStreetMap 圖資)
         m = folium.Map(
             location=[23.8, 121.0],
             zoom_start=7,
             tiles="OpenStreetMap"
         )
-
-        all_latest = query_all_latest_temps()
 
         # 在地圖上放置所有支援地區的標記
         for r_name, coords in REGION_COORDINATES.items():
@@ -305,21 +393,42 @@ def main():
             min_t = temp_info.get("minT", "--")
             max_t = temp_info.get("maxT", "--")
 
-            # 彈出視窗內容
+            t_stat = get_temp_info(max_t)
+            aq_info = all_aq.get(r_name, get_aqi_info(50))
+
+            # 根據當前選擇之視覺模式決定圓點填色
+            if "氣溫" in map_color_mode:
+                marker_color = t_stat["color"]
+            else:
+                marker_color = aq_info["color"]
+
+            # 彈出視窗內容 (整合預報日期、氣溫與即時空氣品質)
             popup_html = f"""
-            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-width: 130px;">
-                <h4 style="margin: 0 0 6px 0; color: #1E3A8A; font-size: 15px;">{r_name}</h4>
-                <p style="margin: 2px 0; font-size: 13px;"><b>最低溫：</b><span style="color:#0284C7;">{min_t} °C</span></p>
-                <p style="margin: 2px 0; font-size: 13px;"><b>最高溫：</b><span style="color:#EA580C;">{max_t} °C</span></p>
-                <p style="margin: 6px 0 0 0; color: #2563EB; font-size: 11px; font-weight:600;">(點選更新右側預報)</p>
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-width: 175px;">
+                <h4 style="margin: 0 0 4px 0; color: #1E3A8A; font-size: 15px;">{r_name}</h4>
+                <p style="margin: 0 0 6px 0; color: #64748B; font-size: 11px; border-bottom: 1px solid #E2E8F0; padding-bottom: 4px;">📅 預報日期：<b>{current_date}</b></p>
+                <p style="margin: 3px 0; font-size: 13px;"><b>🌡️ 氣溫：</b><span style="color:#0284C7;">{min_t}°C</span> ~ <span style="color:#EA580C; font-weight:700;">{max_t}°C</span> <span style="background:{t_stat['bg']}; color:{t_stat['color']}; padding:1px 5px; border-radius:4px; font-size:11px; font-weight:700;">{t_stat['category']}</span></p>
+                <p style="margin: 3px 0; font-size: 13px;"><b>🍃 空品：</b><span style="font-weight:700;">AQI {aq_info['aqi']}</span> <span style="background:{aq_info['bg']}; color:{aq_info['color']}; padding:1px 5px; border-radius:4px; font-size:11px; font-weight:700;">{aq_info['status']}</span></p>
+                <p style="margin: 3px 0; font-size: 12px; color:#64748B;">PM2.5: {aq_info['pm2_5']} μg/m³ · PM10: {aq_info['pm10']} μg/m³</p>
+                <p style="margin: 6px 0 0 0; color: #2563EB; font-size: 11px; font-weight:600;">(點選更新右側預報與空氣品質)</p>
             </div>
             """
 
-            # 當前選中地區用紅色高亮大圓點，其餘地區用藍色清晰圓點
-            marker_color = "#DC2626" if is_selected else "#2563EB"
-            border_color = "#FFFFFF"
+            # 圓點標記樣式：被選中時放大並具外光環
             radius_size = 14 if is_selected else 9
+            border_color = "#0F172A" if is_selected else "#FFFFFF"
             weight_size = 3 if is_selected else 2
+
+            if is_selected:
+                # 選取狀態的外圈鎖定環
+                folium.CircleMarker(
+                    location=coords,
+                    radius=20,
+                    color="#2563EB",
+                    weight=2.5,
+                    fill=False,
+                    opacity=0.85
+                ).add_to(m)
 
             folium.CircleMarker(
                 location=coords,
@@ -328,18 +437,17 @@ def main():
                 weight=weight_size,
                 fill=True,
                 fill_color=marker_color,
-                fill_opacity=0.9,
-                tooltip=r_name,
-                popup=folium.Popup(popup_html, max_width=220)
+                fill_opacity=0.92,
+                tooltip=f"{r_name} ({current_date}) | 🌡️ {max_t}°C ({t_stat['category']}) | 🍃 AQI {aq_info['aqi']} ({aq_info['status']})",
+                popup=folium.Popup(popup_html, max_width=240)
             ).add_to(m)
 
         # 渲染 Folium 地圖並監聽點擊事件
-        # 捕捉 last_object_clicked, last_object_clicked_tooltip, last_object_clicked_popup, last_clicked
         map_data = st_folium(
             m,
             width=550,
-            height=480,
-            key=f"taiwan_folium_{current_region}",
+            height=470,
+            key=f"taiwan_folium_{current_region}_{map_color_mode}",
             returned_objects=[
                 "last_object_clicked",
                 "last_object_clicked_tooltip",
@@ -400,18 +508,42 @@ def main():
         if df.empty:
             st.warning(f"查無 【{current_region}】 的預報資料。")
         else:
-            st.markdown(f"### 📍 【{current_region}】未來一週氣溫趨勢")
+            st.markdown(f"### 📍 【{current_region}】未來一週氣溫與空氣品質")
 
-            # 今日氣溫指標卡
-            today_row = df.iloc[0]
+            # 所選預報日期之氣溫指標卡
+            matching_rows = df[df["dataDate"] == current_date]
+            target_row = matching_rows.iloc[0] if not matching_rows.empty else df.iloc[0]
+
             m1, m2, m3 = st.columns(3)
-            m1.metric("預報起始日", today_row["dataDate"])
-            m1_t = today_row["minT"]
-            m2_t = today_row["maxT"]
+            m1.metric("預報日期", target_row["dataDate"])
+            m1_t = target_row["minT"]
+            m2_t = target_row["maxT"]
+            t_curr = get_temp_info(m2_t)
             m2.metric("最低氣溫 (MinT)", f"{m1_t} °C")
-            m3.metric("最高氣溫 (MaxT)", f"{m2_t} °C")
+            m3.metric("最高氣溫 (MaxT)", f"{m2_t} °C", f"{t_curr['category']}")
 
-            st.markdown("<br>", unsafe_allow_html=True)
+            # 即時空氣品質指標區塊 (AQI, PM2.5, PM10)
+            curr_aq = all_aq.get(current_region, get_aqi_info(50))
+            st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
+            st.markdown("#### 🍃 即時空氣品質監測 (Air Quality)")
+
+            aq1, aq2, aq3, aq4 = st.columns(4)
+            aq1.metric("空氣指標 (AQI)", f"{curr_aq['aqi']}", f"{curr_aq['status']}")
+            aq2.metric("品質狀態", f"{curr_aq['icon']} {curr_aq['status']}")
+            aq3.metric("細懸浮微粒 (PM2.5)", f"{curr_aq['pm2_5']} μg/m³")
+            aq4.metric("懸浮微粒 (PM10)", f"{curr_aq['pm10']} μg/m³")
+
+            # 健康防護建議提示條
+            st.markdown(
+                f"""
+                <div style="background:{curr_aq['bg']}; border-left: 4px solid {curr_aq['color']}; padding: 10px 14px; border-radius: 8px; margin-top: 6px; margin-bottom: 18px;">
+                    <span style="font-size: 1.15rem; vertical-align: middle;">{curr_aq['icon']}</span>
+                    <strong style="color: #0F172A; margin-left: 6px;">健康防護提示：</strong>
+                    <span style="color: #334155; font-size: 0.92rem;">{curr_aq['tip']}</span>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
             # 5. 最高 / 最低溫雙曲線折線圖 (X 軸: dataDate, Y 軸: temperature °C, 兩條線: MaxT, MinT)
             st.markdown("#### 📈 氣溫折線圖 (MaxT / MinT)")

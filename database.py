@@ -94,6 +94,16 @@ def get_all_regions(db_path: str = DEFAULT_DB_PATH) -> List[str]:
         return [row["regionName"] for row in rows]
 
 
+def get_all_dates(db_path: str = DEFAULT_DB_PATH) -> List[str]:
+    """取得資料庫中現有的所有預報日期清單 (依日期升冪排序)"""
+    init_db(db_path)
+    sql = "SELECT DISTINCT dataDate FROM TemperatureForecasts ORDER BY dataDate ASC"
+    with get_connection(db_path) as conn:
+        cursor = conn.cursor()
+        rows = cursor.execute(sql).fetchall()
+        return [row["dataDate"] for row in rows if row["dataDate"]]
+
+
 def get_forecasts_by_region(region_name: str, db_path: str = DEFAULT_DB_PATH) -> List[Dict[str, Any]]:
     """依據縣市名稱查詢該地區所有未來日期的預報資料 (依日期升冪排序)"""
     init_db(db_path)

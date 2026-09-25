@@ -424,6 +424,189 @@
       background: #F8FAFC;
     }
 
+    /* 地圖視覺模式切換按鈕群 */
+    .map-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .map-mode-toggle {
+      display: inline-flex;
+      background: #E2E8F0;
+      padding: 3px;
+      border-radius: 10px;
+      gap: 4px;
+    }
+
+    .mode-btn {
+      padding: 6px 12px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 7px;
+      cursor: pointer;
+      background: transparent;
+      color: #475569;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .mode-btn.active {
+      background: #FFFFFF;
+      color: var(--primary);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    /* 地圖下方色階圖例 */
+    .map-legend-bar {
+      margin-top: 12px;
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.76rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+
+    .legend-title {
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-right: 4px;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .legend-chip {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      color: white;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+      font-size: 0.75rem;
+    }
+
+    .legend-chip.dark-text {
+      color: #0F172A;
+      text-shadow: none;
+    }
+
+    /* 空氣品質狀態徽章與卡片 */
+    .aqi-status-pill {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-left: 8px;
+      vertical-align: middle;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .aqi-row {
+      margin-bottom: 12px;
+    }
+
+    .aqi-card {
+      background: #F0FDF4;
+      border-color: #DCFCE7;
+      transition: all 0.25s ease;
+    }
+
+    .aqi-tip-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      background: #F8FAFC;
+      border-left: 4px solid var(--primary);
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+      line-height: 1.5;
+    }
+
+    /* 地區與預報日期雙下拉選單 */
+    .selectors-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    @media (max-width: 640px) {
+      .selectors-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .selector-field label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .selector-field select {
+      width: 100%;
+      padding: 9px 12px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border: 1px solid #CBD5E1;
+      border-radius: 10px;
+      background: white;
+      color: var(--text-main);
+      outline: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .selector-field select:focus, .map-date-select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .map-date-picker-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #F1F5F9;
+      padding: 3px 8px;
+      border-radius: 8px;
+      border: 1px solid #E2E8F0;
+    }
+
+    .map-date-select {
+      background: white;
+      border: 1px solid #CBD5E1;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      cursor: pointer;
+      outline: none;
+    }
+
+    /* 預報表格選中日期列高亮 */
+    .tr-selected-date {
+      background: #EFF6FF !important;
+      border-left: 3px solid var(--primary);
+    }
+    .tr-selected-date td {
+      font-weight: 700 !important;
+    }
+
     /* 頁尾 */
     footer {
       max-width: 1400px;
@@ -512,8 +695,27 @@
       <div class="native-grid">
         <!-- 左欄: 地圖與分區快捷鍵 -->
         <div class="card">
-          <h3 class="card-title">🗺️ 台灣氣象預報地圖</h3>
-          <p style="font-size:0.85rem; color:#64748B; margin-bottom:12px;">💡 <b>點擊地標圓點</b>即可即時切換右側 7 天溫度趨勢：</p>
+          <div class="map-header-row">
+            <h3 class="card-title" style="margin-bottom:0;">🗺️ 台灣氣象預報地圖</h3>
+            <!-- 右側：日期選擇與模式切換 -->
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <div class="map-date-picker-wrap">
+                <label for="select-map-date" style="font-size:0.8rem; font-weight:700; color:#475569;">📅 日期：</label>
+                <select id="select-map-date" onchange="selectDate(this.value)" class="map-date-select"></select>
+              </div>
+              <!-- 視覺模式切換按鈕 -->
+              <div class="map-mode-toggle">
+                <button id="btn-mode-temp" class="mode-btn active" onclick="setMapMode('temp')">
+                  <span>🌡️ 氣溫色階</span>
+                </button>
+                <button id="btn-mode-aqi" class="mode-btn" onclick="setMapMode('aqi')">
+                  <span>🍃 空氣品質 AQI</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <p style="font-size:0.85rem; color:#64748B; margin-bottom:12px;">💡 <b>點擊地標圓點</b>即可即時切換右側 7 天溫度趨勢與空氣品質：</p>
 
           <div class="quick-regions-bar">
             <button class="btn-quick-reg active" onclick="selectRegion('北部地區')">北部地區</button>
@@ -525,21 +727,31 @@
           </div>
 
           <div id="leaflet-map"></div>
+
+          <!-- 地圖下方色階圖例 -->
+          <div id="map-legend-bar" class="map-legend-bar"></div>
         </div>
 
-        <!-- 右欄: 氣象預報圖表與表格 -->
+        <!-- 右欄: 氣象預報圖表、空氣品質與表格 -->
         <div class="card">
-          <div class="region-select-wrap">
-            <label for="select-region">請選擇預報地區 (regionName)：</label>
-            <select id="select-region" onchange="selectRegion(this.value)"></select>
+          <!-- 地區與日期雙下拉選單 -->
+          <div class="selectors-row">
+            <div class="selector-field">
+              <label for="select-region">📍 請選擇預報地區 (regionName)：</label>
+              <select id="select-region" onchange="selectRegion(this.value)"></select>
+            </div>
+            <div class="selector-field">
+              <label for="select-date">📅 請選擇預報日期 (dataDate)：</label>
+              <select id="select-date" onchange="selectDate(this.value)"></select>
+            </div>
           </div>
 
-          <h3 id="forecast-title" class="card-title">📍 【北部地區】未來一週氣溫趨勢</h3>
+          <h3 id="forecast-title" class="card-title">📍 【北部地區】未來一週氣象與空氣品質</h3>
 
-          <!-- 今日氣溫指標 -->
+          <!-- 今日/所選日氣溫指標 -->
           <div class="metrics-row">
             <div class="metric-card">
-              <div class="metric-label">預報起始日</div>
+              <div class="metric-label">預報日期</div>
               <div id="m-date" class="metric-val" style="font-size:1.05rem;">--</div>
             </div>
             <div class="metric-card">
@@ -549,6 +761,35 @@
             <div class="metric-card">
               <div class="metric-label">最高氣溫 (MaxT)</div>
               <div id="m-maxt" class="metric-val" style="color:#EA580C;">-- °C</div>
+            </div>
+          </div>
+
+          <!-- 即時空氣品質指標區塊 (AQI, PM2.5, PM10) -->
+          <h4 style="font-size:1rem; font-weight:700; color:#1E3A8A; margin: 16px 0 10px 0; display:flex; align-items:center;">
+            <span>🍃 即時空氣品質監測 (Air Quality)</span>
+            <span id="aqi-badge" class="aqi-status-pill">--</span>
+          </h4>
+          <div class="metrics-row aqi-row">
+            <div id="card-aqi" class="metric-card aqi-card">
+              <div class="metric-label">空氣品質指標 (AQI)</div>
+              <div id="m-aqi" class="metric-val">--</div>
+            </div>
+            <div class="metric-card aqi-card">
+              <div class="metric-label">細懸浮微粒 (PM2.5)</div>
+              <div id="m-pm25" class="metric-val">-- <small style="font-size:0.75rem; font-weight:600; color:#64748B;">μg/m³</small></div>
+            </div>
+            <div class="metric-card aqi-card">
+              <div class="metric-label">懸浮微粒 (PM10)</div>
+              <div id="m-pm10" class="metric-val">-- <small style="font-size:0.75rem; font-weight:600; color:#64748B;">μg/m³</small></div>
+            </div>
+          </div>
+
+          <!-- 健康防護提示橫幅 -->
+          <div id="aqi-tip-box" class="aqi-tip-banner">
+            <span id="aqi-tip-icon" style="font-size:1.25rem; line-height:1;">🟢</span>
+            <div>
+              <strong style="color:#0F172A; font-size:0.88rem;">健康防護建議：</strong>
+              <span id="aqi-tip-text" style="color:#334155; font-size:0.86rem;">--</span>
             </div>
           </div>
 
@@ -588,11 +829,16 @@
   </footer>
 
   <script>
-    // 預報資料庫 (與 SQLite TemperatureForecasts 完全同步之 28 個地區未來 7 天資料)
+    // 預報資料庫與即時空氣品質資料庫
     let weatherData = {};
+    let airQualityData = {};
+    let availableDates = [];
+    let currentDate = '';
     let currentRegion = '北部地區';
+    let currentMapMode = 'temp'; // 'temp' (氣溫色階) 或 'aqi' (空氣品質)
     let leafletMap = null;
     let markersMap = {};
+    let selectedHaloMarker = null;
     let tempChart = null;
 
     // 28 地區座標
@@ -627,6 +873,50 @@
       "連江縣": [26.1558, 119.9519]
     };
 
+    // 氣溫級距色彩 (標準氣象色標)
+    function getTempColor(t) {
+      if (t == null || isNaN(t)) return '#94A3B8';
+      const num = Number(t);
+      if (num < 16) return '#2563EB'; // < 16°C 寒冷 (藍)
+      if (num < 20) return '#06B6D4'; // 16~20°C 涼爽 (青藍)
+      if (num < 24) return '#10B981'; // 20~24°C 舒適 (綠)
+      if (num < 28) return '#EAB308'; // 24~28°C 溫和 (黃)
+      if (num < 32) return '#F97316'; // 28~32°C 炎熱 (橘)
+      return '#EF4444';              // ≥ 32°C 酷熱 (紅)
+    }
+
+    function getTempCategory(t) {
+      if (t == null || isNaN(t)) return '未知';
+      const num = Number(t);
+      if (num < 16) return '寒冷';
+      if (num < 20) return '涼爽';
+      if (num < 24) return '舒適';
+      if (num < 28) return '溫和';
+      if (num < 32) return '炎熱';
+      return '酷熱';
+    }
+
+    // AQI 空氣品質分級標準 (遵循環境部標準)
+    function getAqiDetails(val) {
+      const a = Number(val);
+      if (isNaN(a) || val == null) {
+        return { aqi: 40, status: '良好', color: '#10B981', icon: '🟢', bg: 'rgba(16,185,129,0.12)', tip: '空氣品質良好，為正常戶外活動最佳時機。' };
+      }
+      if (a <= 50) {
+        return { aqi: a, status: '良好', color: '#10B981', icon: '🟢', bg: 'rgba(16,185,129,0.12)', tip: '空氣品質良好，為正常戶外活動最佳時機。' };
+      } else if (a <= 100) {
+        return { aqi: a, status: '普通', color: '#EAB308', icon: '🟡', bg: 'rgba(234,179,8,0.12)', tip: '空氣品質普通，極敏感族群可微幅注意呼吸狀況。' };
+      } else if (a <= 150) {
+        return { aqi: a, status: '對敏感族群不健康', color: '#F97316', icon: '🟠', bg: 'rgba(249,115,22,0.12)', tip: '敏感族群外出建議配戴口罩，減少長時間劇烈戶外運動。' };
+      } else if (a <= 200) {
+        return { aqi: a, status: '對所有族群不健康', color: '#EF4444', icon: '🔴', bg: 'rgba(239,68,68,0.12)', tip: '所有族群應減少戶外活動，外出請佩戴口罩做好防護。' };
+      } else if (a <= 300) {
+        return { aqi: a, status: '非常不健康', color: '#8B5CF6', icon: '🟣', bg: 'rgba(139,92,246,0.12)', tip: '健康警報！建議留在室內並減少體力消耗，開啟空氣清淨機。' };
+      } else {
+        return { aqi: a, status: '危害', color: '#881337', icon: '🟤', bg: 'rgba(136,19,55,0.15)', tip: '緊急警報！所有人員應避免戶外活動並緊閉門窗。' };
+      }
+    }
+
     function onIframeLoad() {
       const loader = document.getElementById('iframe-loader');
       if (loader) {
@@ -659,8 +949,102 @@
       }
     }
 
+    // 地圖著色模式切換 (氣溫 vs 空氣品質)
+    function setMapMode(mode) {
+      currentMapMode = mode;
+      const btnTemp = document.getElementById('btn-mode-temp');
+      const btnAqi = document.getElementById('btn-mode-aqi');
+      if (btnTemp && btnAqi) {
+        btnTemp.classList.toggle('active', mode === 'temp');
+        btnAqi.classList.toggle('active', mode === 'aqi');
+      }
+      renderLegend();
+      updateMarkersAppearance();
+    }
+
+    // 選擇預報日期 (連動全台地圖與預報指標)
+    function selectDate(newDate) {
+      if (!newDate || newDate === currentDate) return;
+      currentDate = newDate;
+      const selDate = document.getElementById('select-date');
+      const selMapDate = document.getElementById('select-map-date');
+      if (selDate) selDate.value = newDate;
+      if (selMapDate) selMapDate.value = newDate;
+
+      updateMarkersAppearance();
+      renderForecast();
+    }
+
+    // 渲染圖例 (Legend)
+    function renderLegend() {
+      const bar = document.getElementById('map-legend-bar');
+      if (!bar) return;
+      if (currentMapMode === 'temp') {
+        bar.innerHTML = `
+          <span class="legend-title">🌡️ 氣溫圖例 (MaxT)：</span>
+          <span class="legend-chip" style="background:#2563EB;">&lt; 16°C 寒冷</span>
+          <span class="legend-chip" style="background:#06B6D4;">16~20°C 涼爽</span>
+          <span class="legend-chip" style="background:#10B981;">20~24°C 舒適</span>
+          <span class="legend-chip dark-text" style="background:#EAB308;">24~28°C 溫和</span>
+          <span class="legend-chip" style="background:#F97316;">28~32°C 炎熱</span>
+          <span class="legend-chip" style="background:#EF4444;">&ge; 32°C 酷熱</span>
+        `;
+      } else {
+        bar.innerHTML = `
+          <span class="legend-title">🍃 空品圖例 (AQI)：</span>
+          <span class="legend-chip" style="background:#10B981;">0-50 良好</span>
+          <span class="legend-chip dark-text" style="background:#EAB308;">51-100 普通</span>
+          <span class="legend-chip" style="background:#F97316;">101-150 敏感不健康</span>
+          <span class="legend-chip" style="background:#EF4444;">151-200 不健康</span>
+          <span class="legend-chip" style="background:#8B5CF6;">201-300 非常不健康</span>
+          <span class="legend-chip" style="background:#881337;">300+ 危害</span>
+        `;
+      }
+    }
+
+    // 更新地圖上所有標記的顏色、大小與 Tooltip (依所選預報日期)
+    function updateMarkersAppearance() {
+      for (const [rName, marker] of Object.entries(markersMap)) {
+        const isSel = (rName === currentRegion);
+        const wRecords = weatherData[rName] || [];
+        const targetRec = (wRecords.find(r => r.date === currentDate)) || wRecords[0] || {};
+        const maxT = targetRec.maxT != null ? targetRec.maxT : null;
+        const minT = targetRec.minT != null ? targetRec.minT : null;
+        const tCat = getTempCategory(maxT);
+
+        const aq = airQualityData[rName] || getAqiDetails(45);
+        const markerColor = (currentMapMode === 'temp') ? getTempColor(maxT) : aq.color;
+
+        marker.setStyle({
+          radius: isSel ? 14 : 9,
+          color: isSel ? '#0F172A' : '#FFFFFF',
+          weight: isSel ? 3.5 : 2,
+          fillColor: markerColor,
+          fillOpacity: 0.95
+        });
+
+        if (isSel) marker.bringToFront();
+
+        const tooltipHtml = `
+          <div style="font-family:'Noto Sans TC',sans-serif; font-size:12px; line-height:1.45;">
+            <b style="font-size:13px; color:#1E3A8A;">${rName}</b> <span style="font-size:11px; color:#64748B;">(${currentDate || targetRec.date || ''})</span><br>
+            🌡️ 氣溫：${minT ?? '--'} ~ ${maxT ?? '--'} °C (${tCat})<br>
+            🍃 空品：AQI ${aq.aqi} (${aq.status})
+          </div>
+        `;
+        marker.setTooltipContent(tooltipHtml);
+      }
+
+      // 更新鎖定選取環位置
+      if (selectedHaloMarker && REGION_COORDINATES[currentRegion]) {
+        selectedHaloMarker.setLatLng(REGION_COORDINATES[currentRegion]);
+        selectedHaloMarker.bringToBack();
+      }
+    }
+
     // 初始化極速原生版
     async function initNativeApp() {
+      // 1. 載入天氣預報資料
       if (Object.keys(weatherData).length === 0) {
         try {
           const resp = await fetch('./data.json');
@@ -672,7 +1056,51 @@
         }
       }
 
-      // 填充下拉選單
+      // 2. 載入空氣品質快取資料 (確保離線或快速載入即有數據)
+      if (Object.keys(airQualityData).length === 0) {
+        try {
+          const aqResp = await fetch('./air_quality.json');
+          if (aqResp.ok) {
+            airQualityData = await aqResp.json();
+          }
+        } catch (e) {
+          console.warn('載入 air_quality.json 失敗，改用預設計算', e);
+        }
+      }
+
+      // 3. 背景非同步向 Open-Meteo 獲取最新即時資料
+      fetchLiveAirQuality();
+
+      // 4. 擷取所有可用預報日期
+      const datesSet = new Set();
+      for (const rList of Object.values(weatherData)) {
+        if (Array.isArray(rList)) {
+          rList.forEach(item => {
+            if (item.date) datesSet.add(item.date);
+          });
+        }
+      }
+      availableDates = Array.from(datesSet).sort();
+      if (!currentDate && availableDates.length > 0) {
+        currentDate = availableDates[0];
+      }
+
+      // 5. 填充日期下拉選單 (右側 select-date 與 地圖上方 select-map-date)
+      const selDate = document.getElementById('select-date');
+      const selMapDate = document.getElementById('select-map-date');
+      [selDate, selMapDate].forEach(sel => {
+        if (sel && sel.children.length === 0) {
+          availableDates.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d;
+            opt.textContent = d;
+            sel.appendChild(opt);
+          });
+        }
+        if (sel) sel.value = currentDate;
+      });
+
+      // 6. 填充地區下拉選單
       const sel = document.getElementById('select-region');
       if (sel.children.length === 0) {
         const priority = ["北部地區", "中部地區", "南部地區", "東北部地區", "東部地區", "東南部地區"];
@@ -689,7 +1117,7 @@
         });
       }
 
-      // 初始化 Leaflet 地圖
+      // 7. 初始化 Leaflet 地圖
       if (!leafletMap) {
         leafletMap = L.map('leaflet-map').setView([23.8, 121.0], 7);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -697,15 +1125,24 @@
           attribution: '© OpenStreetMap'
         }).addTo(leafletMap);
 
-        // 放置地標標記
+        // 外層選取鎖定環 (Halo)
+        selectedHaloMarker = L.circleMarker(REGION_COORDINATES[currentRegion] || [25.045, 121.525], {
+          radius: 20,
+          color: '#2563EB',
+          weight: 2.5,
+          fill: false,
+          opacity: 0.8
+        }).addTo(leafletMap);
+
+        // 放置 28 地區標記
         for (const [rName, coords] of Object.entries(REGION_COORDINATES)) {
           const isSel = (rName === currentRegion);
           const marker = L.circleMarker(coords, {
-            radius: isSel ? 13 : 8,
-            color: '#FFFFFF',
-            weight: isSel ? 3 : 2,
-            fillColor: isSel ? '#DC2626' : '#2563EB',
-            fillOpacity: 0.9
+            radius: isSel ? 14 : 9,
+            color: isSel ? '#0F172A' : '#FFFFFF',
+            weight: isSel ? 3.5 : 2,
+            fillColor: '#2563EB',
+            fillOpacity: 0.95
           }).addTo(leafletMap);
 
           marker.bindTooltip(rName, { direction: 'top' });
@@ -716,7 +1153,45 @@
         }
       }
 
+      renderLegend();
+      updateMarkersAppearance();
       renderForecast();
+    }
+
+    // 向 Open-Meteo 獲取全台 28 區最新即時空氣品質
+    async function fetchLiveAirQuality() {
+      try {
+        const names = Object.keys(REGION_COORDINATES);
+        const lats = names.map(n => REGION_COORDINATES[n][0]).join(',');
+        const lngs = names.map(n => REGION_COORDINATES[n][1]).join(',');
+        const url = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lats}&longitude=${lngs}&current=us_aqi,pm2_5,pm10`;
+        const res = await fetch(url);
+        if (res.ok) {
+          const list = await res.json();
+          if (Array.isArray(list) && list.length === names.length) {
+            names.forEach((name, idx) => {
+              const curr = list[idx].current || {};
+              const rawAqi = curr.us_aqi;
+              const details = getAqiDetails(rawAqi);
+              airQualityData[name] = {
+                regionName: name,
+                aqi: details.aqi,
+                status: details.status,
+                color: details.color,
+                icon: details.icon,
+                bg: details.bg,
+                tip: details.tip,
+                pm2_5: curr.pm2_5 != null ? Math.round(curr.pm2_5 * 10) / 10 : Math.round(details.aqi * 0.35),
+                pm10: curr.pm10 != null ? Math.round(curr.pm10 * 10) / 10 : Math.round(details.aqi * 0.55)
+              };
+            });
+            updateMarkersAppearance();
+            renderForecast();
+          }
+        }
+      } catch (err) {
+        console.warn('線上取得即時空氣品質失敗，已使用預設快取:', err);
+      }
     }
 
     // 選取地區
@@ -733,39 +1208,63 @@
         btn.classList.toggle('active', btn.textContent === regionName);
       });
 
-      // 更新地圖標記樣式
-      for (const [rName, marker] of Object.entries(markersMap)) {
-        const isSel = (rName === currentRegion);
-        marker.setStyle({
-          radius: isSel ? 13 : 8,
-          fillColor: isSel ? '#DC2626' : '#2563EB',
-          weight: isSel ? 3 : 2
-        });
-        if (isSel) marker.bringToFront();
-      }
-
+      updateMarkersAppearance();
       renderForecast();
     }
 
-    // 渲染預報圖表與表格
+    // 渲染預報圖表、空氣品質與表格
     function renderForecast() {
       const records = weatherData[currentRegion] || [];
-      document.getElementById('forecast-title').textContent = `📍 【${currentRegion}】未來一週氣溫趨勢`;
+      document.getElementById('forecast-title').textContent = `📍 【${currentRegion}】未來一週氣象與空氣品質`;
 
       if (records.length === 0) return;
 
-      const first = records[0];
-      document.getElementById('m-date').textContent = first.date;
-      document.getElementById('m-mint').textContent = `${first.minT} °C`;
-      document.getElementById('m-maxt').textContent = `${first.maxT} °C`;
+      // 取得當前所選預報日期的氣溫資料
+      const targetRecord = (records.find(r => r.date === currentDate)) || records[0];
+      const tCat = getTempCategory(targetRecord.maxT);
+      document.getElementById('m-date').textContent = targetRecord.date;
+      document.getElementById('m-mint').textContent = `${targetRecord.minT} °C`;
+      document.getElementById('m-maxt').innerHTML = `${targetRecord.maxT} °C <span style="font-size:0.75rem; color:#64748B; font-weight:600;">(${tCat})</span>`;
 
-      // 渲染表格
+      // 渲染空氣品質卡片與健康防護提示
+      const aq = airQualityData[currentRegion] || getAqiDetails(45);
+      const aqiBadge = document.getElementById('aqi-badge');
+      if (aqiBadge) {
+        aqiBadge.textContent = `${aq.icon} ${aq.status}`;
+        aqiBadge.style.background = aq.bg;
+        aqiBadge.style.color = aq.color;
+        aqiBadge.style.border = `1px solid ${aq.color}`;
+      }
+
+      document.getElementById('m-aqi').innerHTML = `<span style="color:${aq.color}">${aq.aqi}</span>`;
+      document.getElementById('m-pm25').innerHTML = `${aq.pm2_5 ?? Math.round(aq.aqi * 0.35)} <small style="font-size:0.75rem; font-weight:600; color:#64748B;">μg/m³</small>`;
+      document.getElementById('m-pm10').innerHTML = `${aq.pm10 ?? Math.round(aq.aqi * 0.55)} <small style="font-size:0.75rem; font-weight:600; color:#64748B;">μg/m³</small>`;
+
+      const cardAqi = document.getElementById('card-aqi');
+      if (cardAqi) {
+        cardAqi.style.background = aq.bg;
+        cardAqi.style.borderColor = aq.color;
+      }
+
+      const tipBox = document.getElementById('aqi-tip-box');
+      if (tipBox) {
+        tipBox.style.background = aq.bg;
+        tipBox.style.borderLeftColor = aq.color;
+        document.getElementById('aqi-tip-icon').textContent = aq.icon;
+        document.getElementById('aqi-tip-text').textContent = aq.tip;
+      }
+
+      // 渲染表格 (高亮當前所選日期)
       const tbody = document.getElementById('forecast-table-body');
       tbody.innerHTML = '';
       records.forEach(row => {
+        const isCurrentDate = (row.date === currentDate);
         const tr = document.createElement('tr');
+        if (isCurrentDate) {
+          tr.className = 'tr-selected-date';
+        }
         tr.innerHTML = `
-          <td style="font-weight:600;">${row.date}</td>
+          <td style="font-weight:600;">${isCurrentDate ? '👉 ' : ''}${row.date}</td>
           <td style="color:#0284C7; font-weight:700;">${row.minT} °C</td>
           <td style="color:#EA580C; font-weight:700;">${row.maxT} °C</td>
         `;
