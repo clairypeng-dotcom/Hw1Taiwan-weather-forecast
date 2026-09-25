@@ -4,7 +4,7 @@
 [![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live%20Demo-blue?logo=github)](https://clairypeng-dotcom.github.io/Hw1Taiwan-weather-forecast/)
 
 > 🔗 **線上即時展示網址 (Live Demos)**：
-> - 🌤️ **Streamlit 雲端氣象預報系統 (HW10 核心成果)**：  
+> - 🌤️ **Streamlit 雲端氣象預報系統 (HW1 核心成果)**：  
 >   👉 **[https://hw1taiwan-weather-forecast-dqhwvp6gxevbtxpwiglajz.streamlit.app](https://hw1taiwan-weather-forecast-dqhwvp6gxevbtxpwiglajz.streamlit.app)**
 > - 🌐 **GitHub Pages 靜態前端展示 (HW1 原生網頁)**：  
 >   👉 **[https://clairypeng-dotcom.github.io/Hw1Taiwan-weather-forecast/](https://clairypeng-dotcom.github.io/Hw1Taiwan-weather-forecast/)**
